@@ -56,7 +56,7 @@ def firms_entry() -> list[dict]:
             "type": "Active fire (point detections)", "status": "Available",
             "date_range": f"{years[0]} – 2026-09-30" if years else "?",
             "spatial_resolution": f"{info.get('nominal_resolution_m', '?')} m pixel", "crs": "EPSG:4326 (WGS84 points)",
-            "purpose": "Active-fire detection, observed fire-state initialisation, historical validation",
+            "purpose": "Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input)",
             "format": f"CSV ({len(fs)} files, {size(fs)})", "local_path": rel(fs[0].parent.parent) + f"/DL_FIRE_{prod}_*",
             "preprocessing": "Normalised + de-duplicated to Parquet (region subset and 10-day global NRT)",
             "data_class": "observed",
@@ -120,7 +120,7 @@ def main() -> None:
         "source": "MTBS / burned-area perimeters (MTBS, BAER, RAVG, CBI)", "type": "Burned-area perimeters (vector)", "status": "Available",
         "date_range": f"{mrep.get('range_ig_date', ['?', '?'])[0]} – {mrep.get('range_ig_date', ['?', '?'])[1]}",
         "spatial_resolution": "vector (Landsat-derived, 30 m)", "crs": "EPSG:4269 (NAD83 geographic)",
-        "purpose": "Historical validation context and historical-fire catalogue", "format": f"Zipped shapefile ({size([zp])})",
+        "purpose": "Historical-fire catalogue and final-perimeter context (not used for metrics or training)", "format": f"Zipped shapefile ({size([zp])})",
         "local_path": rel(zp), "preprocessing": f"BBox-filtered {mrep['rows']} perimeters → GeoJSON (pure-Python shapefile reader)",
         "data_class": "observed",
     })
@@ -146,12 +146,12 @@ def main() -> None:
             "crs": "EPSG:5070", "purpose": "Training / validation / test of U-Net, FNO, PI-FNO",
             "format": "NPZ per scenario + Parquet index", "local_path": rel(ds_m.parent),
             "preprocessing": f"{sa['scenario_id'].nunique()} scenarios, {int(sa['valid'].sum())} valid samples; spatial-block split",
-            "data_class": "simulated", "notes": "Rothermel + MTT reference simulator (not FARSITE); FFWI-weighted start-time sampling.",
+            "data_class": "simulated", "notes": "Internal Rothermel + MTT reference simulator (not FARSITE/FlamMap); FFWI-weighted start-time sampling.",
         })
     entries.append({
         "source": "FARSITE / FlamMap outputs", "type": "External reference simulations", "status": "Not present",
         "date_range": "—", "spatial_resolution": "—", "crs": "—", "purpose": "Optional reference / benchmark data",
-        "format": "arrival-time raster or perimeters", "local_path": "simulation/outputs/ (import via UI or API)",
+        "format": "arrival-time raster or timed perimeters", "local_path": "simulation/outputs/ (import via CLI, UI or API)",
         "preprocessing": "simulation/converters/importers.py", "data_class": "simulated",
     })
 

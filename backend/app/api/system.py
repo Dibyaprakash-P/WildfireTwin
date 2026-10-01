@@ -118,10 +118,11 @@ async def logs(limit: int = Query(200, ge=1, le=1000), component: str | None = N
 
 @router.get("/data/catalog")
 async def catalog():
-    p = registry.path("data/metadata/catalog.json")
-    if not p.exists():
+    """Catalogue with live status (files checked per request) and audited roles."""
+    if not registry.path("data/metadata/catalog.json").exists():
         raise APIError(404, "catalog_missing", "Data catalog not generated. Run: python -m scripts.inventory_data")
-    return json.loads(p.read_text())
+    from backend.app.services.catalog import live_catalog
+    return await live_catalog()
 
 
 @router.get("/events/stream")

@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-10-01T06:34:24.159712+00:00",
+  "generated_utc": "2026-10-01T17:16:40.319836+00:00",
   "entries": [
     {
       "source": "NASA FIRMS VIIRS NOAA-20 (J1V-C2)",
@@ -8,7 +8,7 @@
       "date_range": "2019 \u2013 2026-09-30",
       "spatial_resolution": "375 m pixel",
       "crs": "EPSG:4326 (WGS84 points)",
-      "purpose": "Active-fire detection, observed fire-state initialisation, historical validation",
+      "purpose": "Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input)",
       "format": "CSV (9 files, 12.70 GB)",
       "local_path": "datasets/DL_FIRE_J1V-C2_*",
       "preprocessing": "Normalised + de-duplicated to Parquet (region subset and 10-day global NRT)",
@@ -22,7 +22,7 @@
       "date_range": "2024 \u2013 2026-09-30",
       "spatial_resolution": "375 m pixel",
       "crs": "EPSG:4326 (WGS84 points)",
-      "purpose": "Active-fire detection, observed fire-state initialisation, historical validation",
+      "purpose": "Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input)",
       "format": "CSV (3 files, 4.39 GB)",
       "local_path": "datasets/DL_FIRE_J2V-C2_*",
       "preprocessing": "Normalised + de-duplicated to Parquet (region subset and 10-day global NRT)",
@@ -35,7 +35,7 @@
       "date_range": "2010 \u2013 2026-09-30",
       "spatial_resolution": "1000 m pixel",
       "crs": "EPSG:4326 (WGS84 points)",
-      "purpose": "Active-fire detection, observed fire-state initialisation, historical validation",
+      "purpose": "Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input)",
       "format": "CSV (10 files, 3.03 GB)",
       "local_path": "datasets/DL_FIRE_M-C61_*",
       "preprocessing": "Normalised + de-duplicated to Parquet (region subset and 10-day global NRT)",
@@ -48,7 +48,7 @@
       "date_range": "2012 \u2013 2026-09-30",
       "spatial_resolution": "375 m pixel",
       "crs": "EPSG:4326 (WGS84 points)",
-      "purpose": "Active-fire detection, observed fire-state initialisation, historical validation",
+      "purpose": "Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input)",
       "format": "CSV (14 files, 20.81 GB)",
       "local_path": "datasets/DL_FIRE_SV-C2_*",
       "preprocessing": "Normalised + de-duplicated to Parquet (region subset and 10-day global NRT)",
@@ -117,7 +117,7 @@
       "date_range": "1984-07-02 \u2013 2026-08-05",
       "spatial_resolution": "vector (Landsat-derived, 30 m)",
       "crs": "EPSG:4269 (NAD83 geographic)",
-      "purpose": "Historical validation context and historical-fire catalogue",
+      "purpose": "Historical-fire catalogue and final-perimeter context (not used for metrics or training)",
       "format": "Zipped shapefile (660.9 MB)",
       "local_path": "datasets/bsp_zmysxvwg6simrvuefqrx/burn_severity_perimeter_data.zip",
       "preprocessing": "BBox-filtered 918 perimeters \u2192 GeoJSON (pure-Python shapefile reader)",
@@ -161,7 +161,7 @@
       "local_path": "data/processed/training/wtrs-ncal-v1",
       "preprocessing": "2400 scenarios, 22505 valid samples; spatial-block split",
       "data_class": "simulated",
-      "notes": "Rothermel + MTT reference simulator (not FARSITE); FFWI-weighted start-time sampling."
+      "notes": "Internal Rothermel + MTT reference simulator (not FARSITE/FlamMap); FFWI-weighted start-time sampling."
     },
     {
       "source": "FARSITE / FlamMap outputs",
@@ -171,8 +171,8 @@
       "spatial_resolution": "\u2014",
       "crs": "\u2014",
       "purpose": "Optional reference / benchmark data",
-      "format": "arrival-time raster or perimeters",
-      "local_path": "simulation/outputs/ (import via UI or API)",
+      "format": "arrival-time raster or timed perimeters",
+      "local_path": "simulation/outputs/ (import via CLI, UI or API)",
       "preprocessing": "simulation/converters/importers.py",
       "data_class": "simulated"
     }

@@ -1,7 +1,7 @@
 {
-  "generated_utc": "2026-10-01T08:53:03.544010+00:00",
+  "generated_utc": "2026-10-01T17:08:52.069377+00:00",
   "split": "test",
-  "split_strategy": "spatial block hold-out (0.5 deg blocks unseen in training)",
+  "split_strategy": "spatial blocks of 0.5 deg assigned by ignition location (scenarios never shared; 54% of test windows partly overlap training landscapes - see strict subset)",
   "device": "cuda",
   "device_name": "NVIDIA GeForce RTX 5050 Laptop GPU",
   "threshold": 0.5,
@@ -10,7 +10,7 @@
       "name": "U-Net",
       "status": "evaluated",
       "run_id": "unet-20261001-054841",
-      "checkpoint": "data\\models\\unet\\unet-20261001-054841\\model.pt",
+      "checkpoint": "data/models/unet/unet-20261001-054841/model.pt",
       "n_params": 7771969,
       "overall": {
         "iou": 0.7411500123108697,
@@ -149,17 +149,32 @@
           "horizon_min": 4320.0
         }
       },
-      "inference_ms": 3.591900000174064,
+      "strict_overall": {
+        "iou": 0.7703170948304201,
+        "dice": 0.8484229794879986,
+        "precision": 0.8907793502825725,
+        "recall": 0.8669243327548276,
+        "growth_iou": 0.6133480421294798,
+        "growth_f1": 0.7009033557581387,
+        "hausdorff_m": 211.79947336433938,
+        "hd95_m": 148.14503851084817,
+        "mae": 0.004046743857748112,
+        "area_true_km2": 1.7516690641247832,
+        "area_pred_km2": 1.703325649913345,
+        "area_error_pct": 98.83264521927103,
+        "horizon_min": 850.342287694974
+      },
+      "inference_ms": 2.604849993076641,
       "inference_device": "cuda",
-      "inference_ms_cpu": 18.621600000187755,
-      "speedup_vs_reference": 11.85903003898922,
-      "speedup_vs_reference_cpu": 2.287475297433095
+      "inference_ms_cpu": 17.046699998900294,
+      "speedup_vs_reference": 13.600572045545917,
+      "speedup_vs_reference_cpu": 2.078258548631941
     },
     "fno": {
       "name": "FNO",
       "status": "evaluated",
       "run_id": "fno-20261001-062945",
-      "checkpoint": "data\\models\\fno\\fno-20261001-062945\\model.pt",
+      "checkpoint": "data/models/fno/fno-20261001-062945/model.pt",
       "n_params": 7395601,
       "overall": {
         "iou": 0.6983643156220468,
@@ -298,17 +313,32 @@
           "horizon_min": 4320.0
         }
       },
-      "inference_ms": 3.0394999994314276,
+      "strict_overall": {
+        "iou": 0.7301533399478493,
+        "dice": 0.8185258597063427,
+        "precision": 0.8614288156938131,
+        "recall": 0.8508442160181828,
+        "growth_iou": 0.5535072753521092,
+        "growth_f1": 0.6480698735761811,
+        "hausdorff_m": 265.54605797919805,
+        "hd95_m": 178.870826344639,
+        "mae": 0.0049126967751261155,
+        "area_true_km2": 1.7516690641247832,
+        "area_pred_km2": 1.8179337088388212,
+        "area_error_pct": 190.68581238464034,
+        "horizon_min": 850.342287694974
+      },
+      "inference_ms": 2.9141500053810887,
       "inference_device": "cuda",
-      "inference_ms_cpu": 53.63095000211615,
-      "speedup_vs_reference": 14.014295116656605,
-      "speedup_vs_reference_cpu": 0.79425126717742
+      "inference_ms_cpu": 37.782649997097906,
+      "speedup_vs_reference": 12.157044055131173,
+      "speedup_vs_reference_cpu": 0.9376645100700938
     },
     "physics_fno": {
       "name": "Physics-Informed FNO",
       "status": "evaluated",
       "run_id": "physics_fno-20261001-072651",
-      "checkpoint": "data\\models\\physics_fno\\physics_fno-20261001-072651\\model.pt",
+      "checkpoint": "data/models/physics_fno/physics_fno-20261001-072651/model.pt",
       "n_params": 7395601,
       "overall": {
         "iou": 0.7083155402197199,
@@ -447,15 +477,71 @@
           "horizon_min": 4320.0
         }
       },
-      "inference_ms": 3.3350499979860615,
+      "strict_overall": {
+        "iou": 0.7410963634227523,
+        "dice": 0.8269815465111066,
+        "precision": 0.8574760307548346,
+        "recall": 0.8671247192026267,
+        "growth_iou": 0.5734582030731766,
+        "growth_f1": 0.6671537492709521,
+        "hausdorff_m": 241.08569177835324,
+        "hd95_m": 171.69579894256947,
+        "mae": 0.005876897804700151,
+        "area_true_km2": 1.7516690641247832,
+        "area_pred_km2": 1.7264624350086657,
+        "area_error_pct": 171.13555378626958,
+        "horizon_min": 850.342287694974
+      },
+      "inference_ms": 2.8986499964958057,
       "inference_device": "cuda",
-      "inference_ms_cpu": 51.88039999848115,
-      "speedup_vs_reference": 12.772357243469319,
-      "speedup_vs_reference_cpu": 0.8210509171162261
+      "inference_ms_cpu": 37.87015000125393,
+      "speedup_vs_reference": 12.22205165905062,
+      "speedup_vs_reference_cpu": 0.9354980109005533
     }
   },
+  "evaluated_against": "WTRS reference simulations (simulated; Rothermel + MTT) - not observed ground truth",
   "dataset_version": "wtrs-ncal-v1",
   "test_samples": 5086,
+  "reference": {
+    "dataset_name": "wtrs_ncal_v1",
+    "dataset_version": "wtrs-ncal-v1",
+    "simulation_source": "WTRS",
+    "reference_engine": "WTRS-Rothermel-MTT",
+    "simulation_method": "Rothermel (1972) surface rate of spread with Scott & Burgan (2005) FBFM40 fuels, Anderson (1983) elliptical shape, minimum-travel-time growth (time-dependent Dijkstra, 16-neighbour stencil), hourly ERA5 weather",
+    "source_version": "1.0.0",
+    "data_class": "simulated",
+    "region": "Northern California (Klamath / North Coast Ranges)",
+    "region_bbox_wgs84": [
+      -124.5,
+      40.0,
+      -122.0,
+      42.0
+    ],
+    "temporal_coverage": "ERA5 weather, years [2024, 2025], months [6, 7, 8, 9, 10]",
+    "spatial_resolution_m": [
+      30,
+      60,
+      120
+    ],
+    "grid_size": 128,
+    "forecast_horizons_min": [
+      10,
+      30,
+      60,
+      360,
+      720,
+      1440,
+      2880,
+      4320
+    ],
+    "target_variable": "burned mask at t0 + horizon (arrival time <= t0 + h) from the reference simulation",
+    "split": "spatial blocks of 0.5\u00b0 (ignition location); see docs/wtrs_dataset.md for window-overlap caveat"
+  },
+  "strict_test": {
+    "criterion": "test window has zero area overlap with every training window (all bands)",
+    "scenarios": 257,
+    "samples": 2308
+  },
   "persistence_baseline": {
     "name": "Persistence (no growth)",
     "overall": {
@@ -472,12 +558,30 @@
       "area_pred_km2": 0.6277652182461659,
       "area_error_pct": -57.06524147302343,
       "horizon_min": 1268.3857648446717
+    },
+    "strict_overall": {
+      "iou": 0.5129997319172622,
+      "dice": 0.6033545859781576,
+      "precision": 1.0,
+      "recall": 0.5129997319172622,
+      "growth_iou": 0.1910745233968804,
+      "growth_f1": 0.1910745233968804,
+      "hausdorff_m": 470.96730544822384,
+      "hd95_m": 408.29970905435465,
+      "mae": 0.009585745826337738,
+      "area_true_km2": 1.7516690641247832,
+      "area_pred_km2": 0.3455516464471404,
+      "area_error_pct": -48.70002680827377,
+      "horizon_min": 850.342287694974
     }
   },
   "reference_simulation": {
     "simulator": "WTRS-Rothermel-MTT",
-    "median_ms": 42.59644999910961,
+    "median_ms": 35.42744999867864,
     "samples": 150,
     "device": "cpu (single-threaded Python)"
-  }
+  },
+  "notes": [
+    "split_strategy wording corrected by the 2026-10-01 scientific audit (metrics unchanged)"
+  ]
 }

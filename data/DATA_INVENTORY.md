@@ -1,6 +1,6 @@
 # Data Inventory
 
-_Generated 2026-10-01T06:34:24Z by `python -m scripts.inventory_data` from file metadata._
+_Generated 2026-10-01T17:16:40Z by `python -m scripts.inventory_data` from file metadata._
 
 Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied). Processed products live in `data/processed/`.
 
@@ -15,7 +15,7 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | crs | EPSG:4326 (WGS84 points) |
 | format | CSV (9 files, 12.70 GB) |
 | local path | datasets/DL_FIRE_J1V-C2_* |
-| purpose | Active-fire detection, observed fire-state initialisation, historical validation |
+| purpose | Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input) |
 | preprocessing | Normalised + de-duplicated to Parquet (region subset and 10-day global NRT) |
 | data class | observed |
 | notes | Region subset: 602,529 detections (2010-01-22 – 2026-09-30); global recent: 1,617,350 (2026-09-21 – 2026-09-30) |
@@ -31,7 +31,7 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | crs | EPSG:4326 (WGS84 points) |
 | format | CSV (3 files, 4.39 GB) |
 | local path | datasets/DL_FIRE_J2V-C2_* |
-| purpose | Active-fire detection, observed fire-state initialisation, historical validation |
+| purpose | Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input) |
 | preprocessing | Normalised + de-duplicated to Parquet (region subset and 10-day global NRT) |
 | data class | observed |
 
@@ -46,7 +46,7 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | crs | EPSG:4326 (WGS84 points) |
 | format | CSV (10 files, 3.03 GB) |
 | local path | datasets/DL_FIRE_M-C61_* |
-| purpose | Active-fire detection, observed fire-state initialisation, historical validation |
+| purpose | Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input) |
 | preprocessing | Normalised + de-duplicated to Parquet (region subset and 10-day global NRT) |
 | data class | observed |
 
@@ -61,7 +61,7 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | crs | EPSG:4326 (WGS84 points) |
 | format | CSV (14 files, 20.81 GB) |
 | local path | datasets/DL_FIRE_SV-C2_* |
-| purpose | Active-fire detection, observed fire-state initialisation, historical validation |
+| purpose | Active-fire monitoring, inference fire-state initialisation, historical replay comparison (not a training input) |
 | preprocessing | Normalised + de-duplicated to Parquet (region subset and 10-day global NRT) |
 | data class | observed |
 
@@ -140,7 +140,7 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | crs | EPSG:4269 (NAD83 geographic) |
 | format | Zipped shapefile (660.9 MB) |
 | local path | datasets/bsp_zmysxvwg6simrvuefqrx/burn_severity_perimeter_data.zip |
-| purpose | Historical validation context and historical-fire catalogue |
+| purpose | Historical-fire catalogue and final-perimeter context (not used for metrics or training) |
 | preprocessing | BBox-filtered 918 perimeters → GeoJSON (pure-Python shapefile reader) |
 | data class | observed |
 
@@ -188,7 +188,7 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | purpose | Training / validation / test of U-Net, FNO, PI-FNO |
 | preprocessing | 2400 scenarios, 22505 valid samples; spatial-block split |
 | data class | simulated |
-| notes | Rothermel + MTT reference simulator (not FARSITE); FFWI-weighted start-time sampling. |
+| notes | Internal Rothermel + MTT reference simulator (not FARSITE/FlamMap); FFWI-weighted start-time sampling. |
 
 ## FARSITE / FlamMap outputs
 
@@ -199,8 +199,8 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 | date range | — |
 | spatial resolution | — |
 | crs | — |
-| format | arrival-time raster or perimeters |
-| local path | simulation/outputs/ (import via UI or API) |
+| format | arrival-time raster or timed perimeters |
+| local path | simulation/outputs/ (import via CLI, UI or API) |
 | purpose | Optional reference / benchmark data |
 | preprocessing | simulation/converters/importers.py |
 | data class | simulated |

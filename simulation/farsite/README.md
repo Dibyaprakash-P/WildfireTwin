@@ -20,3 +20,7 @@ Imported results are stored under `data/simulations/<id>/` and labelled `data_cl
 ## Using FARSITE outputs for training
 Convert each run into the scenario format of `ml/datasets/generate.py` (landscape arrays + `arrival_min` +
 hourly weather) and add it to a new dataset version; the dataset/trainer code is simulator-agnostic.
+
+Full workflow (export → `python -m simulation.converters.import_cli` → `python -m simulation.converters.build_dataset`
+→ separate engine-named dataset version): [`docs/farsite_flame_map_workflow.md`](../../docs/farsite_flame_map_workflow.md).
+WTRS (the current training data) is produced by the internal Rothermel + MTT engine, not by this tool.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { EmptyState, ErrorState, KV, LoadingState, Panel } from "../components/ui";
+import { DataClassTag, EmptyState, ErrorState, KV, LoadingState, Panel } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
 import { num, utc } from "../lib/format";
 import type { ModelStatus } from "../types/api";
@@ -12,6 +12,7 @@ interface ModelResult {
   run_id?: string;
   n_params?: number;
   overall?: Metrics;
+  strict_overall?: Metrics;
   per_horizon?: Record<string, Metrics>;
   inference_ms?: number;
   inference_ms_cpu?: number;
@@ -27,7 +28,10 @@ interface Compare {
   dataset_version?: string;
   device_name?: string;
   models: Record<string, ModelResult>;
-  persistence_baseline?: { name: string; overall: Metrics };
+  persistence_baseline?: { name: string; overall: Metrics; strict_overall?: Metrics };
+  evaluated_against?: string;
+  strict_test?: { criterion: string; scenarios: number; samples: number };
+  reference?: { reference_engine: string; simulation_source: string };
   reference_simulation?: { simulator: string; median_ms: number; samples: number; device: string };
 }
 
@@ -61,7 +65,8 @@ export default function ModelsPage() {
           {cmp.status === "evaluated" && (
             <div className="text-2xs text-dim mb-2 space-y-0.5">
               <div>Split: {cmp.split_strategy} · test samples: {cmp.test_samples} · dataset: {cmp.dataset_version} · device: {cmp.device_name}</div>
-              <div>Targets are WTRS reference simulations (simulated), not observed ground truth. Threshold p ≥ 0.5.</div>
+              <div>Evaluated against: <span className="text-warn">{cmp.evaluated_against ?? "WTRS reference simulations (simulated; Rothermel + MTT)"}</span>. Threshold p ≥ 0.5.</div>
+              <div>Observed ↔ predicted comparisons are separate: see Historical Data (single-case replays vs FIRMS footprints).</div>
             </div>
           )}
           <div className="flex items-center gap-2 mb-2">
@@ -113,6 +118,28 @@ export default function ModelsPage() {
               </tbody>
             </table>
           </div>
+          {cmp.strict_test && (
+            <div className="mt-3">
+              <div className="text-2xs uppercase tracking-[0.14em] text-dim mb-1">
+                Strict test subset — {cmp.strict_test.samples} samples / {cmp.strict_test.scenarios} scenarios ({cmp.strict_test.criterion})
+              </div>
+              <table className="w-full text-xs border-collapse tabular-nums">
+                <thead><tr className="text-2xs uppercase tracking-wider text-dim text-left">
+                  {["Model", "IoU", "Dice", "Growth IoU", "Growth F1", "Hausdorff (m)"].map((h) => <th key={h} className="border-b border-line py-1 pr-3 font-medium">{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {[...ORDER.map((t) => [cmp.models[t]?.name ?? t, cmp.models[t]?.status === "evaluated" ? cmp.models[t]?.strict_overall : undefined] as const),
+                    [cmp.persistence_baseline?.name ?? "Persistence", cmp.persistence_baseline?.strict_overall] as const].map(([n, m]) => (
+                    <tr key={n} className="border-b border-line/60">
+                      <td className="py-1 pr-3 text-head">{n}</td>
+                      {m ? (["iou", "dice", "growth_iou", "growth_f1"] as const).map((k) => <td key={k} className="pr-3">{num(m[k], 3)}</td>) : <td className="pr-3" colSpan={4}>{NE}</td>}
+                      <td className="pr-3">{m ? num(m.hausdorff_m, 0) : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           {cmp.reference_simulation && (
             <p className="text-2xs text-dim mt-2 mb-0">
               Speed-up = median {cmp.reference_simulation.simulator} re-simulation time ({num(cmp.reference_simulation.median_ms, 1)} ms,
@@ -127,6 +154,9 @@ export default function ModelsPage() {
           <Panel key={m.model_type} title={m.name}>
             {!m.trained ? <EmptyState message="Not trained." hint={`python -m ml.training.train_${m.model_type}`} /> : (
               <dl className="m-0">
+                <KV k="Training data" v={m.training_data ? `${m.training_data.simulation_source} reference simulations (${m.training_data.dataset_version})` : "—"} />
+                <KV k="Reference method" v={m.training_data ? <DataClassTag c="simulated" engine={m.training_data.simulation_source === "WTRS" ? "Rothermel + MTT" : m.training_data.reference_engine} /> : "—"} />
+                <KV k="Physics-informed" v={m.physics_informed ? "YES — data + eikonal + irreversibility + non-burnable loss" : "NO — data loss only"} />
                 <KV k="Run" v={<span className="text-2xs break-all">{m.run_id}</span>} />
                 <KV k="Checkpoint" v={<span className="text-2xs break-all">{m.checkpoint}</span>} />
                 {m.summary && (
@@ -149,7 +179,7 @@ export default function ModelsPage() {
           <li><b className="text-head">U-Net</b> — convolutional encoder–decoder baseline, BCE + Dice loss.</li>
           <li><b className="text-head">FNO</b> — Fourier Neural Operator: spectral convolution layers (truncated Fourier modes) + pointwise linear maps; learns the map from landscape/weather/fire-state fields to the future burned field.</li>
           <li><b className="text-head">Physics-Informed FNO</b> — same backbone predicting fire arrival time; loss = data + λ·(anisotropic eikonal residual with Rothermel/Anderson spread rates + irreversibility + non-burnable fuel constraints).</li>
-          <li>Training data: WTRS reference simulations (Rothermel + minimum travel time) on real SRTM/LANDFIRE/WorldCover landscapes driven by ERA5 weather. Spatial-block hold-out split.</li>
+          <li>Training data: WTRS reference simulations (internal Rothermel + minimum-travel-time pipeline — not FARSITE) on real SRTM/LANDFIRE/WorldCover landscapes driven by ERA5 weather. Split: 0.5° spatial blocks by ignition location; 54% of test windows partially overlap training landscapes, so a strict no-overlap subset is reported separately.</li>
         </ul>
       </Panel>
     </div>

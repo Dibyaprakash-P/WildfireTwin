@@ -14,15 +14,21 @@ Supported inputs
      (earliest perimeter containing each cell centre)
 
 Output: arrival-time GeoTIFF in minutes (float32, nodata = -1) + metadata,
-labelled data_class = "simulated", simulator = "FARSITE" / "FlamMap" (as
-declared by the user). Nothing is generated or interpolated beyond the
-supplied file.
+labelled data_class = "simulated", simulation_source = "FARSITE" / "FlamMap"
+(as declared by the user), with the SHA-256 of the source file for traceability.
+Nothing is generated or interpolated beyond the supplied file.
+
+Time-stamped frames are DERIVED from the arrival field (`arrival_to_frames`):
+burned(t) = arrival <= t. No other frame format is assumed.
+Imported runs never enter the WTRS dataset; `build_dataset.py` converts them into a separate dataset version.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import zipfile
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -46,22 +52,41 @@ class ImportErrorInvalid(ValueError):
     pass
 
 
-def import_arrival_raster(path: Path, units: str, simulator: str) -> ImportedSimulation:
+def _provenance(path: Path, simulator: str) -> dict:
+    if simulator not in ALLOWED_SIMULATORS:
+        raise ImportErrorInvalid(f"simulator must be one of {ALLOWED_SIMULATORS}")
+    h = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return {"simulator": simulator, "simulation_source": simulator, "reference_engine": f"{simulator} (external, imported)",
+            "data_class": "simulated", "source_sha256": h, "imported_utc": datetime.now(timezone.utc).isoformat()}
+
+
+def arrival_to_frames(arrival_min: np.ndarray, times_min: list[float]) -> dict[float, np.ndarray]:
+    """Burned masks at the requested times, derived exactly from the arrival field (no interpolation)."""
+    valid = arrival_min >= 0
+    return {t: (valid & (arrival_min <= t)) for t in times_min}
+
+
+def import_arrival_raster(path: Path, units: str, simulator: str, crs: str | None = None) -> ImportedSimulation:
+    """`crs` is used ONLY when the file has no CRS (e.g. an .asc exported without .prj) and must be given explicitly."""
     if units not in ("minutes", "hours"):
         raise ImportErrorInvalid("units must be 'minutes' or 'hours'")
     with rasterio.open(path) as src:
-        if src.crs is None:
-            raise ImportErrorInvalid("raster has no CRS (supply a .prj with the .asc or a georeferenced GeoTIFF)")
+        file_crs = src.crs.to_string() if src.crs else None
+        if file_crs is None and not crs:
+            raise ImportErrorInvalid("raster has no CRS: supply the .prj with the .asc, a georeferenced GeoTIFF, "
+                                     "or pass the landscape CRS explicitly (e.g. EPSG:5070 for LANDFIRE-based landscapes)")
         a = src.read(1).astype(np.float32)
         nod = src.nodata
         valid = np.isfinite(a) & (a >= 0)
         if nod is not None:
             valid &= a != nod
         a = np.where(valid, a * (60.0 if units == "hours" else 1.0), -1.0).astype(np.float32)
-        meta = {"source_file": path.name, "simulator": simulator, "data_class": "simulated", "input_units": units,
-                "shape": list(a.shape), "crs": src.crs.to_string(), "res": list(src.res),
-                "burned_cells": int(valid.sum()), "max_arrival_min": float(a[valid].max()) if valid.any() else None}
-        return ImportedSimulation(a, src.transform, src.crs.to_string(), meta)
+        use_crs = file_crs or crs
+        meta = {"source_file": path.name, **_provenance(path, simulator), "kind": "arrival_raster", "input_units": units,
+                "shape": list(a.shape), "crs": use_crs, "crs_from": "file" if file_crs else "user-specified",
+                "res": list(src.res), "burned_cells": int(valid.sum()),
+                "max_arrival_min": float(a[valid].max()) if valid.any() else None}
+        return ImportedSimulation(a, src.transform, use_crs, meta)
 
 
 def import_perimeters(path: Path, time_field: str, units: str, simulator: str, cell_m: float = 60.0,
@@ -75,7 +100,11 @@ def import_perimeters(path: Path, time_field: str, units: str, simulator: str, c
     if gdf.crs is None:
         raise ImportErrorInvalid("perimeter file has no CRS")
     gdf = gdf.to_crs(crs)
-    gdf["_t"] = gdf[time_field].astype(float) * (60.0 if units == "hours" else 1.0)
+    try:
+        gdf["_t"] = gdf[time_field].astype(float) * (60.0 if units == "hours" else 1.0)
+    except (TypeError, ValueError):
+        raise ImportErrorInvalid(f"time field '{time_field}' must hold elapsed time since ignition ({units}); "
+                                 "convert date/time attributes to elapsed time before importing")
     xmin, ymin, xmax, ymax = gdf.total_bounds
     pad = 5 * cell_m
     xmin, ymin, xmax, ymax = xmin - pad, ymin - pad, xmax + pad, ymax + pad
@@ -85,7 +114,7 @@ def import_perimeters(path: Path, time_field: str, units: str, simulator: str, c
     for _, r in gdf.sort_values("_t", ascending=False).iterrows():   # earliest written last
         m = rasterize([(r.geometry, 1)], out_shape=(h, w), transform=tr, fill=0, dtype="uint8").astype(bool)
         arrival[m] = r["_t"]
-    meta = {"source_file": path.name, "simulator": simulator, "data_class": "simulated", "input_units": units,
+    meta = {"source_file": path.name, **_provenance(path, simulator), "kind": "perimeters", "input_units": units,
             "time_field": time_field, "perimeters": int(len(gdf)), "cell_m": cell_m, "crs": crs,
             "shape": [h, w], "burned_cells": int((arrival >= 0).sum())}
     return ImportedSimulation(arrival, tr, crs, meta)

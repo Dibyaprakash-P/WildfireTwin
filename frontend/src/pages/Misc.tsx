@@ -15,45 +15,86 @@ import type { Alert, LogEntry } from "../types/api";
 interface CatalogEntry {
   source: string; type: string; status: string; date_range: string; spatial_resolution: string; purpose: string;
   format: string; crs: string; local_path: string; preprocessing: string; data_class: string; notes?: string;
+  group: "observed" | "simulated" | "external"; used_in_training: boolean; roles: string[]; role_note?: string | null;
+  engine?: string; live?: Record<string, unknown>;
+}
+interface Catalog {
+  generated_utc: string; groups: Record<string, string>; entries: CatalogEntry[];
+  software: { name: string; status: string; path: string | null; engines: string[]; note: string }[];
+}
+
+const STATUS_OK = ["Available", "Generated", "Imported", "Installed"];
+
+function statusClass(s: string) {
+  if (STATUS_OK.includes(s)) return "text-ok";
+  if (s.startsWith("Online")) return "text-info";
+  if (s.startsWith("Missing")) return "text-crit";
+  return "text-warn";
 }
 
 export function DataPage() {
-  const [cat, setCat] = useState<{ generated_utc: string; entries: CatalogEntry[] } | null>(null);
+  const [cat, setCat] = useState<Catalog | null>(null);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { api<typeof cat>("/api/data/catalog").then(setCat).catch((e) => setError(errorMessage(e))); }, []);
+  useEffect(() => { api<Catalog>("/api/data/catalog").then(setCat).catch((e) => setError(errorMessage(e))); }, []);
   return (
-    <div className="h-full overflow-auto p-3">
-      <Panel title="Data Catalog" right={cat && <span className="text-2xs text-dim">metadata extracted {utc(cat.generated_utc)}</span>}>
-        {error && <ErrorState message={error} />}
-        {!cat && !error && <LoadingState />}
-        {cat && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="text-2xs uppercase tracking-wider text-dim text-left">
-                  {["Source", "Type", "Status", "Date range", "Spatial res.", "CRS", "Purpose", "Class", "Preprocessing"].map((h) => (
-                    <th key={h} className="border-b border-line py-1.5 pr-3 font-medium">{h}</th>))}
-                </tr>
-              </thead>
-              <tbody>
-                {cat.entries.map((e) => (
-                  <tr key={e.source} id={e.source.toLowerCase().includes("firms") ? "firms" : undefined} className="border-b border-line/60 align-top">
-                    <td className="py-1.5 pr-3 text-head">{e.source}<div className="text-2xs text-dim break-all">{e.local_path}</div></td>
-                    <td className="pr-3">{e.type}<div className="text-2xs text-dim">{e.format}</div></td>
-                    <td className={`pr-3 ${e.status === "Available" ? "text-ok" : "text-warn"}`}>{e.status}</td>
-                    <td className="pr-3 tabular-nums">{e.date_range}</td>
-                    <td className="pr-3">{e.spatial_resolution}</td>
-                    <td className="pr-3 text-2xs">{e.crs}</td>
-                    <td className="pr-3">{e.purpose}</td>
-                    <td className="pr-3"><DataClassTag c={e.data_class as "observed"} /></td>
-                    <td className="pr-3 text-2xs">{e.preprocessing}{e.notes && <div className="text-dim mt-1">{e.notes}</div>}</td>
+    <div className="h-full overflow-auto p-3 space-y-3">
+      {error && <ErrorState message={error} />}
+      {!cat && !error && <LoadingState />}
+      {cat && (["observed", "simulated", "external"] as const).map((g) => {
+        const rows = cat.entries.filter((e) => e.group === g);
+        if (!rows.length) return null;
+        return (
+          <Panel key={g} title={cat.groups[g] ?? g}
+                 right={<span className="text-2xs text-dim">status checked live · metadata extracted {utc(cat.generated_utc)}</span>}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="text-2xs uppercase tracking-wider text-dim text-left">
+                    {["Source", "Type", "Status", "Date range", "Spatial res.", "CRS", "Used in training", "Actual roles", "Class", "Preprocessing"].map((h) => (
+                      <th key={h} className="border-b border-line py-1.5 pr-3 font-medium">{h}</th>))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Panel>
+                </thead>
+                <tbody>
+                  {rows.map((e) => (
+                    <tr key={e.source} id={e.source.toLowerCase().includes("firms") ? "firms" : undefined} className="border-b border-line/60 align-top">
+                      <td className="py-1.5 pr-3 text-head">{e.source}<div className="text-2xs text-dim break-all">{e.local_path}</div></td>
+                      <td className="pr-3">{e.type}<div className="text-2xs text-dim">{e.format}</div></td>
+                      <td className={`pr-3 ${statusClass(e.status)}`}>
+                        {e.status}
+                        {e.live && "valid_samples" in e.live && (
+                          <div className="text-2xs text-dim">{String(e.live.scenarios)} scenarios · {String(e.live.valid_samples)} valid samples</div>)}
+                        {e.live && "expected_location" in e.live && <div className="text-2xs text-dim">expected: {String(e.live.expected_location)}</div>}
+                      </td>
+                      <td className="pr-3 tabular-nums">{e.date_range}</td>
+                      <td className="pr-3">{e.spatial_resolution}</td>
+                      <td className="pr-3 text-2xs">{e.crs}</td>
+                      <td className={`pr-3 ${e.used_in_training ? "text-ok" : "text-dim"}`}>{e.used_in_training ? "YES" : "NO"}</td>
+                      <td className="pr-3 text-2xs">
+                        {e.roles.length ? <ul className="m-0 pl-3">{e.roles.map((r) => <li key={r}>{r}</li>)}</ul> : <span className="text-warn">not used by the current pipeline</span>}
+                        {e.role_note && <div className="text-dim mt-1">{e.role_note}</div>}
+                      </td>
+                      <td className="pr-3"><DataClassTag c={e.data_class as "observed"} engine={e.engine} /></td>
+                      <td className="pr-3 text-2xs">{e.preprocessing}{e.notes && <div className="text-dim mt-1">{e.notes}</div>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        );
+      })}
+      {cat && (
+        <Panel title="Installed research software (not data)">
+          <dl className="m-0">
+            {cat.software.map((s) => (
+              <div key={s.name}>
+                <KV k={s.name} v={<span className={statusClass(s.status)}>{s.status}{s.path ? ` · ${s.path}` : ""}{s.engines.length ? ` · ${s.engines.join(", ")}` : ""}</span>} />
+                <p className="text-2xs text-dim m-0 mt-1">{s.note}</p>
+              </div>
+            ))}
+          </dl>
+        </Panel>
+      )}
     </div>
   );
 }
@@ -342,7 +383,7 @@ export function HistoricalPage() {
         </div>
       </div>
       <div className="overflow-auto bg-bg flex flex-col gap-px">
-        <Panel title="Replay & Validation" right={<DataClassTag c="validated" />}>
+        <Panel title="Replay & Validation" right={<DataClassTag c="validated" engine="single case vs FIRMS" />}>
           {!sel ? <EmptyState message="Select a historical fire." /> : (
             <>
               <dl className="m-0">

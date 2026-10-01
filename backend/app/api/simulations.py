@@ -48,7 +48,7 @@ async def create(req: SimulationRequest, user: dict = Depends(current_user)):
 @router.post("/import")
 async def import_result(file: UploadFile = File(...), kind: Literal["arrival_raster", "perimeters"] = Form(...),
                         simulator: Literal["FARSITE", "FlamMap", "other"] = Form(...),
-                        units: Literal["minutes", "hours"] = Form("minutes"), time_field: str | None = Form(None),
+                        units: Literal["minutes", "hours"] = Form(...), time_field: str | None = Form(None),
                         user: dict = Depends(current_user)):
     name = Path(file.filename or "upload").name
     if not name.lower().endswith((".tif", ".tiff", ".asc", ".zip", ".geojson", ".json", ".gpkg")):

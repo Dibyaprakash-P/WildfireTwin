@@ -12,6 +12,7 @@ import torch
 
 from backend.app.config import get_settings
 from geo import registry
+from ml.datasets.provenance import dataset_card
 from ml.models.factory import DISPLAY_NAMES, MODEL_TYPES, load_checkpoint, select_device
 
 log = logging.getLogger(__name__)
@@ -56,7 +57,10 @@ class ModelRegistry:
         out = []
         for t in MODEL_TYPES:
             info = self.latest_info(t)
+            ds_version = ((info or {}).get("summary") or {}).get("dataset_version")
             out.append({"model_type": t, "name": DISPLAY_NAMES[t], "trained": bool(info and info["exists"]),
+                        "training_data": dataset_card(ds_version) if ds_version else None,
+                        "physics_informed": t == "physics_fno",
                         "run_id": info["run_id"] if info else None,
                         "checkpoint": info["checkpoint"] if info else None,
                         "summary": info["summary"] if info else None,

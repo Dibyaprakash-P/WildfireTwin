@@ -178,4 +178,6 @@ export interface ModelStatus {
   run_id: string | null;
   checkpoint: string | null;
   summary: Record<string, unknown> | null;
+  physics_informed?: boolean;
+  training_data?: { dataset_version: string; simulation_source: string; reference_engine: string; simulation_method: string } | null;
 }

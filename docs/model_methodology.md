@@ -81,7 +81,9 @@ never from targets.
 the horizon, discrete 16-neighbour solver). The mean |log residual| of the *reference* arrival fields is logged in
 the training history (`reference_eikonal_abs_log_residual`, ≈ 0.7 on the validation set), which is why the term is a
 low-weight soft prior. It is a modular, replaceable component — a natural next step is to use the hourly physics
-fields instead of horizon means.
+fields instead of horizon means. Training record (audit): the PI-FNO's eikonal term fell from 1.11 to 0.30, i.e. the
+trained model satisfies the horizon-mean eikonal relation *more* closely than the reference data does (≈ 0.60) — so the
+term acts as a consistency/smoothness prior, not as evidence of greater physical fidelity.
 
 Using FARSITE-like data does **not** by itself make a model physics-informed; only the PI-FNO adds physics terms.
 

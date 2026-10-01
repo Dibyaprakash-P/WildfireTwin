@@ -2,6 +2,33 @@
 
 WildfireTwin is **global for fire discovery** and **local for prediction**.
 
+## Data & model lineage
+
+```
+OBSERVED DATA
+FIRMS · ERA5 · SRTM · LANDFIRE · WorldCover · MTBS · Open-Meteo
+        ↓
+LOCAL ENVIRONMENTAL GRID (128×128, EPSG:5070, 30/60/120 m)
+        ↓
+REFERENCE SIMULATION
+  CURRENT : WTRS — internal Rothermel + MTT          (simulation_source = WTRS)
+  OPTIONAL: FARSITE / FlamMap import (external)        (separate dataset version; none imported yet)
+        ↓
+TRAINING DATA  wtrs-ncal-v1  (2,400 scenarios · 22,505 valid samples)
+        ↓
+U-Net · FNO · Physics-informed FNO
+        ↓
+WildfireTwin inference (FIRMS footprint + Open-Meteo forecast)
+        ↓
+3D Cesium visualization
+        ↓
+Dynamic forecast + alerts
+```
+The current models are surrogates of **WTRS (Rothermel + MTT)** reference simulations, not of FARSITE. See
+`docs/scientific_audit.md`.
+
+## Global discovery vs local prediction
+
 ```
             ┌───────────────────────── GLOBAL ─────────────────────────┐
  NASA FIRMS │ API (MAP_KEY) or local NRT CSVs → normalise → cluster →  │

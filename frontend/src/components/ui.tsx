@@ -70,8 +70,12 @@ const DC_STYLE: Record<DataClass, string> = {
 };
 
 /** Data-provenance tag: text label, never colour alone. */
-export function DataClassTag({ c }: { c: DataClass }) {
-  return <span className={`tag ${DC_STYLE[c]}`}>{c}</span>;
+export function DataClassTag({ c, engine }: { c: DataClass; engine?: string }) {
+  return (
+    <span className={`tag ${DC_STYLE[c]} ${engine ? "h-auto min-h-[18px] flex-wrap py-[1px] text-left" : ""}`} title={engine ? `${c} · ${engine}` : c}>
+      {c}{engine && <span className="normal-case tracking-normal opacity-80 whitespace-normal">· {engine}</span>}
+    </span>
+  );
 }
 
 const SEV_STYLE: Record<string, string> = {

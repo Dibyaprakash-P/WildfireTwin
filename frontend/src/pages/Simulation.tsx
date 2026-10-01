@@ -51,6 +51,7 @@ export default function SimulationPage() {
   const [herb, setHerb] = useState(0.6);
   const [woody, setWoody] = useState(0.9);
 
+  const [engine, setEngine] = useState<"wtrs" | "import">("wtrs");
   const [sims, setSims] = useState<Sim[] | null>(null);
   const [active, setActive] = useState<Sim | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +118,18 @@ export default function SimulationPage() {
   return (
     <div className="h-full overflow-y-auto xl:overflow-hidden grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] min-h-0 gap-px bg-line">
       <div className="overflow-auto bg-bg flex flex-col gap-px">
-        <Panel title="Configure Inputs" right={<DataClassTag c="simulated" />}>
+        <Panel title="Reference engine">
+          <div role="radiogroup" aria-label="Reference engine" className="grid grid-cols-2 gap-px bg-line border border-line">
+            {([["wtrs", "WTRS / Rothermel + MTT", "in-app reference simulator"], ["import", "Import FARSITE / FlamMap", "external offline output"]] as const).map(([k, l, d]) => (
+              <button key={k} role="radio" aria-checked={engine === k} onClick={() => setEngine(k)}
+                      className={`text-left px-2 py-1.5 text-xs ${engine === k ? "bg-raised text-head border-l-2 border-warn" : "bg-panel text-dim hover:text-ink border-l-2 border-transparent"}`}>
+                [ {l} ]<div className="text-2xs text-dim">{d}</div>
+              </button>
+            ))}
+          </div>
+          <p className="text-2xs text-dim mt-2 mb-0">Different engines — results are labelled with their engine and never mixed. Both are reference simulations (simulated), not observed data.</p>
+        </Panel>
+        {engine === "wtrs" && <Panel title="Configure Inputs" right={<DataClassTag c="simulated" engine="Rothermel + MTT" />}>
           <form onSubmit={run} id="inputs" className="space-y-3">
             <fieldset className="border-0 p-0 m-0">
               <legend className="label">Fire / ignition</legend>
@@ -166,11 +178,11 @@ export default function SimulationPage() {
             </div>
             <p className="text-2xs text-dim m-0">Fuel: LANDFIRE FBFM40 · Terrain: SRTM slope/aspect · Live fuel moisture is a scenario parameter (fraction), not observed.</p>
             {error && <ErrorState message={error} />}
-            <button className="btn-primary w-full" disabled={busy || (useFire && !fireId)}>{busy ? "Starting…" : "[ Run Reference Simulation ]"}</button>
+            <button className="btn-primary w-full" disabled={busy || (useFire && !fireId)}>{busy ? "Starting…" : "[ Run Reference Simulation · WTRS ]"}</button>
             <button type="button" className="btn w-full" disabled={!fireId} onClick={runModel}>[ Run WildfireTwin ] → dashboard</button>
           </form>
-        </Panel>
-        <ImportPanel onImported={(s) => { setActive(s); void load(); }} />
+        </Panel>}
+        {engine === "import" && <ImportPanel onImported={(s) => { setActive(s); void load(); }} />}
       </div>
       <div className="relative h-[55vh] xl:h-auto min-h-[360px] bg-bg">
         <GlobeViewer overlays={overlays} />
@@ -184,7 +196,7 @@ export default function SimulationPage() {
           {!active ? <EmptyState message="No simulation selected." /> : (
             <dl className="m-0">
               <KV k="ID" v={active.simulation_id} />
-              <KV k="Type" v={active.kind === "imported" ? `Imported ${active.simulator}` : `${active.simulator} (in-repo)`} />
+              <KV k="Engine" v={active.kind === "imported" ? <DataClassTag c="simulated" engine={`${active.simulator} (imported)`} /> : <DataClassTag c="simulated" engine="Rothermel + MTT (WTRS)" />} />
               <KV k="Status" v={active.status === "failed" ? <span className="text-crit">FAILED — {active.error}</span> : active.status.toUpperCase()} />
               {active.status === "running" && <LoadingState label="Simulating" />}
               {active.runtime_s !== undefined && <KV k="Runtime" v={`${num(active.runtime_s, 2)} s (CPU)`} />}
@@ -215,7 +227,7 @@ export default function SimulationPage() {
               {sims.map((s) => (
                 <li key={s.simulation_id}>
                   <button onClick={() => setActive(s)} className={`w-full text-left text-xs py-1 px-1 border-l-2 ${active?.simulation_id === s.simulation_id ? "border-warn bg-raised" : "border-transparent hover:bg-raised"}`}>
-                    {s.simulation_id} · {s.kind === "imported" ? s.simulator : "WTRS"} · {s.status} <span className="text-dim text-2xs">{utc(s.created_at)}</span>
+                    {s.simulation_id} · {s.kind === "imported" ? `${s.simulator} (imported)` : "WTRS · Rothermel+MTT"} · {s.status} <span className="text-dim text-2xs">{utc(s.created_at)}</span>
                   </button>
                 </li>
               ))}
@@ -232,7 +244,7 @@ function ImportPanel({ onImported }: { onImported: (s: Sim) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [kind, setKind] = useState("arrival_raster");
   const [simulator, setSimulator] = useState("FARSITE");
-  const [units, setUnits] = useState("minutes");
+  const [units, setUnits] = useState("");
   const [timeField, setTimeField] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -257,7 +269,7 @@ function ImportPanel({ onImported }: { onImported: (s: Sim) => void }) {
     }
   };
   return (
-    <Panel title="Import Simulation Result">
+    <Panel title="Import Simulation Result" right={<DataClassTag c="simulated" engine="FARSITE / FlamMap" />}>
       <form onSubmit={submit} className="space-y-2">
         <p className="text-2xs text-dim m-0">Offline FARSITE / FlamMap outputs: arrival-time raster (.tif / .asc+.prj in .zip) or timed perimeters (.zip shapefile / .geojson).</p>
         <input type="file" aria-label="Simulation file" className="text-xs" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
@@ -268,13 +280,14 @@ function ImportPanel({ onImported }: { onImported: (s: Sim) => void }) {
           <select className="input" value={simulator} onChange={(e) => setSimulator(e.target.value)} aria-label="Simulator">
             <option>FARSITE</option><option>FlamMap</option><option>other</option>
           </select>
-          <select className="input" value={units} onChange={(e) => setUnits(e.target.value)} aria-label="Time units">
-            <option>minutes</option><option>hours</option>
+          <select className="input" value={units} onChange={(e) => setUnits(e.target.value)} aria-label="Time units of the export">
+            <option value="" disabled>units…</option><option>minutes</option><option>hours</option>
           </select>
         </div>
         {kind === "perimeters" && <input className="input" placeholder="time field name" value={timeField} onChange={(e) => setTimeField(e.target.value)} aria-label="Time field" />}
         {msg && <p className="text-xs m-0">{msg}</p>}
-        <button className="btn w-full" disabled={!file || busy || !session}>{session ? "[ Import Simulation Result ]" : "Sign in to import"}</button>
+        <p className="text-2xs text-dim m-0">Choose the time units shown in your FARSITE/FlamMap run settings — they are not assumed.</p>
+        <button className="btn w-full" disabled={!file || !units || busy || !session}>{session ? "[ Import Result ]" : "Sign in to import"}</button>
       </form>
     </Panel>
   );

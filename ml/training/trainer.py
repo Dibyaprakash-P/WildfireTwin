@@ -29,6 +29,7 @@ from torch.utils.data import DataLoader
 
 from geo import registry
 from ml.datasets.dataset import WildfireDataset
+from ml.datasets.provenance import dataset_card
 from ml.features import CHANNELS
 from ml.models.factory import build_model, select_device
 from ml.models.physics_fno.physics import PhysicsWeights, physics_losses, reference_residual
@@ -147,7 +148,8 @@ def run(cfg: dict, dev: bool = False, max_train: int | None = None) -> Path:
             best, best_epoch, patience = score, epoch, 0
             torch.save({"state_dict": model.state_dict(), "config": cfg, "channels": CHANNELS, "epoch": epoch,
                         "val": {k: v for k, v in row.items() if k.startswith("val_")}, "run_id": run_id,
-                        "dataset_version": dcfg["dataset_version"], "n_params": n_params}, out / "model.pt")
+                        "dataset_version": dcfg["dataset_version"], "n_params": n_params,
+                        "training_data": dataset_card(dcfg["dataset_version"])}, out / "model.pt")
         else:
             patience += 1
             if patience >= tcfg["early_stopping_patience"]:
@@ -160,6 +162,8 @@ def run(cfg: dict, dev: bool = False, max_train: int | None = None) -> Path:
                "device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",
                "n_params": n_params, "dataset_version": dcfg["dataset_version"], "dev_mode": dev,
                "train_samples": len(train_ds), "val_samples": len(val_ds),
+               "training_data": dataset_card(dcfg["dataset_version"]),
+               "input_variables": list(CHANNELS),
                "finished_utc": datetime.now(timezone.utc).isoformat()}
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
     if not dev:

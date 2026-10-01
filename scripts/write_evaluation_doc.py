@@ -32,7 +32,13 @@ def main() -> None:
         "",
         "## Protocol",
         f"* Test split: {r['split_strategy']}; **{r.get('test_samples', 'n/a')} samples**; dataset `{r.get('dataset_version', 'n/a')}`.",
-        "* Targets are **WTRS reference simulations (simulated)**, not observed ground truth. Probability threshold 0.5.",
+        "* Evaluated against: **WTRS reference simulations (simulated; internal Rothermel + MTT pipeline, not FARSITE)** - "
+        "not observed ground truth. Probability threshold 0.5.",
+        f"* Reference dataset: `{(r.get('reference') or {}).get('dataset_version', r.get('dataset_version'))}`, "
+        f"simulation_source `{(r.get('reference') or {}).get('simulation_source', 'n/a')}`, "
+        f"engine `{(r.get('reference') or {}).get('reference_engine', 'n/a')}`.",
+        "* Observed-data comparisons (predicted vs FIRMS footprints) are single-case historical replays, reported separately "
+        "in the app; they are not part of this table.",
         "* Growth metrics are computed on cells that were *not* burning at t0 (the initial fire is an input, so full-mask "
         "IoU/Dice are inflated by it). Hausdorff distances are between mask boundaries, in metres.",
         f"* Inference time: median per sample, batch 1, on {r['device_name']} ({r['device']}) and on CPU.",
@@ -57,6 +63,20 @@ def main() -> None:
     rs = r.get("reference_simulation")
     if rs:
         L += ["", f"Reference re-simulation: median {rs['median_ms']:.1f} ms over {rs['samples']} test samples ({rs['device']})."]
+    st = r.get("strict_test")
+    if st:
+        L += ["", f"## Strict test subset ({st['samples']} samples, {st['scenarios']} scenarios)", "",
+              f"Criterion: {st['criterion']}. The split assigns scenarios to 0.5° blocks by ignition location; 128x128 "
+              "windows near block borders can cover terrain also seen in training windows. This subset removes that overlap.", "",
+              "| Model | IoU | Dice | Growth IoU | Growth F1 | Hausdorff (m) |", "|---|---|---|---|---|---|"]
+        for t in ORDER:
+            m = r["models"].get(t, {})
+            so = m.get("strict_overall")
+            if m.get("status") == "evaluated" and so:
+                L.append(f"| {m['name']} | {f(so['iou'], 3)} | {f(so['dice'], 3)} | {f(so['growth_iou'], 3)} | {f(so['growth_f1'], 3)} | {f(so['hausdorff_m'], 0)} |")
+        ps = (r.get("persistence_baseline") or {}).get("strict_overall")
+        if ps:
+            L.append(f"| _Persistence (no growth)_ | {f(ps['iou'], 3)} | {f(ps['dice'], 3)} | {f(ps['growth_iou'], 3)} | {f(ps['growth_f1'], 3)} | {f(ps['hausdorff_m'], 0)} |")
     L += ["", "## Per horizon — Growth IoU / IoU / Hausdorff (m)", ""]
     labels = None
     for t in ORDER:

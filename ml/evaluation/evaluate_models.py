@@ -100,13 +100,35 @@ def resimulate_ms(ds: WildfireDataset, n: int, seed: int = 0) -> tuple[float, in
     return float(np.median(times)), len(times)
 
 
+def strict_mask(ds: WildfireDataset) -> tuple[np.ndarray, dict]:
+    """True for test samples whose analysis window does not overlap ANY training window (any band).
+
+    The split assigns scenarios to spatial blocks by ignition location; windows near block borders can still cover
+    terrain that appears in training windows. This subset removes that partial landscape overlap.
+    """
+    from shapely.geometry import box
+    from shapely.strtree import STRtree
+    sc = ds.scen
+    train = [box(*json.loads(b)) for b in sc.loc[sc["split"] == "train", "bbox_wgs84"]]
+    tree = STRtree(train)
+    clean = {}
+    for sid in ds.samples["scenario_id"].unique():
+        g = box(*json.loads(sc.loc[sid, "bbox_wgs84"]))
+        clean[sid] = not any(g.intersects(train[i]) and g.intersection(train[i]).area > 0 for i in tree.query(g))
+    m = ds.samples["scenario_id"].map(clean).to_numpy(dtype=bool)
+    return m, {"criterion": "test window has zero area overlap with every training window (all bands)",
+               "scenarios": int(sum(clean.values())), "samples": int(m.sum())}
+
+
 def evaluate(max_samples: int | None, speedup_samples: int) -> dict:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     device = select_device()
     results = {"generated_utc": datetime.now(timezone.utc).isoformat(), "split": "test",
-               "split_strategy": "spatial block hold-out (0.5 deg blocks unseen in training)",
+               "split_strategy": "spatial blocks of 0.5 deg assigned by ignition location (scenarios never shared; 54% of test windows partly overlap training landscapes - see strict subset)",
                "device": str(device), "device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",
-               "threshold": 0.5, "models": {}}
+               "threshold": 0.5, "models": {},
+               "evaluated_against": "WTRS reference simulations (simulated; Rothermel + MTT) - not observed ground truth"}
+    from ml.datasets.provenance import dataset_card
     ds = None
     for mtype in MODEL_TYPES:
         lt = _latest(mtype)
@@ -120,6 +142,9 @@ def evaluate(max_samples: int | None, speedup_samples: int) -> dict:
             ds = WildfireDataset(ck["dataset_version"], "test", augment=False, max_samples=max_samples, seed=7)
             results["dataset_version"] = ck["dataset_version"]
             results["test_samples"] = len(ds)
+            results["reference"] = dataset_card(ck["dataset_version"])
+            strict, strict_info = strict_mask(ds)
+            results["strict_test"] = strict_info
         log.info("evaluating %s (%s) on %d samples", mtype, run_id, len(ds))
         probs = predict_all(model, ds, device)
         rows = []
@@ -129,10 +154,11 @@ def evaluate(max_samples: int | None, speedup_samples: int) -> dict:
             m["horizon_min"] = s.meta["horizon_min"]
             rows.append(m)
         results["models"][mtype] = {
-            "name": DISPLAY_NAMES[mtype], "status": "evaluated", "run_id": run_id, "checkpoint": str(ck_path.relative_to(registry.REPO_ROOT)),
+            "name": DISPLAY_NAMES[mtype], "status": "evaluated", "run_id": run_id, "checkpoint": ck_path.relative_to(registry.REPO_ROOT).as_posix(),
             "n_params": ck.get("n_params"), "overall": aggregate(rows),
             "per_horizon": {HORIZON_LABELS[int(h)]: aggregate([r for r in rows if r["horizon_min"] == h])
                             for h in sorted({r["horizon_min"] for r in rows})},
+            "strict_overall": aggregate([r for r, k in zip(rows, strict) if k]),
             "inference_ms": time_inference(model, ds, device),
             "inference_device": str(device),
             "inference_ms_cpu": time_inference(copy.deepcopy(model).cpu(), ds, torch.device("cpu"), n=30),
@@ -145,7 +171,8 @@ def evaluate(max_samples: int | None, speedup_samples: int) -> dict:
             m = mask_metrics(m0, s.y.numpy()[0], m0, s.meta["cell_m"])
             m["horizon_min"] = s.meta["horizon_min"]
             rows.append(m)
-        results["persistence_baseline"] = {"name": "Persistence (no growth)", "overall": aggregate(rows)}
+        results["persistence_baseline"] = {"name": "Persistence (no growth)", "overall": aggregate(rows),
+                                           "strict_overall": aggregate([r for r, k in zip(rows, strict) if k])}
         sim_ms, n_sim = resimulate_ms(ds, speedup_samples)
         results["reference_simulation"] = {"simulator": "WTRS-Rothermel-MTT", "median_ms": sim_ms, "samples": n_sim,
                                            "device": "cpu (single-threaded Python)"}

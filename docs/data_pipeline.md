@@ -94,5 +94,17 @@ t0 6/12/24/48 h; 24/48/72 h). 800 scenarios per band.
 
 The study bbox is cut into 0.5° × 0.5° blocks (20 blocks); whole blocks are assigned to train / val (3) / test (4)
 with a fixed seed. Overlapping time slices of one scenario therefore never cross splits, and the test set evaluates
-generalisation to **unseen landscapes and unseen fire scenarios**. (Windows of the coarsest band can extend a few km
-into a neighbouring block; this partial terrain overlap is a known, documented limitation.)
+generalisation to **unseen fire scenarios**. Landscapes are only partly unseen: blocks are assigned by *ignition*
+location and the 128×128 windows (up to 15.4 km wide) cross block borders — 54 % of test windows overlap some training
+window (audit, `docs/wtrs_dataset.md`). The evaluation therefore also reports a strict subset with zero window overlap
+(2,308 samples); growth IoU differs by ≤ 0.007. There is no temporal hold-out (all splits use 2024–2025 weather).
+
+Every scenario/sample row carries `simulation_source = WTRS`, `reference_engine = WTRS-Rothermel-MTT`,
+`simulation_method`, `source_version`. Imported FARSITE/FlamMap runs become separate dataset versions
+(`docs/farsite_flame_map_workflow.md`); the loader refuses mixed engines.
+
+## Burned-area perimeters (MTBS / BAER / RAVG)
+
+Used to list historical fires that can be replayed and to display their final perimeter as **context**. Replay
+metrics are computed against the observed cumulative FIRMS footprint at t0 + h, not against these perimeters
+(a final perimeter has no timing). Burn-severity mosaics are not used.
