@@ -1,0 +1,46 @@
+# Training-dataset generation config (reference simulations -> samples).
+# All values are DEFAULTS chosen for a laptop GPU / CPU; change and bump
+# `dataset_version` to regenerate.
+
+dataset_version: "wtrs-ncal-v1"
+seed: 20260101
+grid_size: 128
+
+# Ignition start times are sampled from ERA5 hours in these months/years.
+weather:
+  years: [2024, 2025]
+  months: [6, 7, 8, 9, 10]
+  live_herb_moisture: [0.30, 0.90]     # uniform range (fraction) - scenario parameter, not observed
+  live_woody_moisture: [0.70, 1.20]
+  # Fire-weather-weighted sampling: a candidate start hour is accepted with
+  # probability clip(mean FFWI over the first `ffwi_hours` / ffwi_scale, ffwi_min_accept, 1).
+  # This deliberately OVER-SAMPLES elevated fire weather; the dataset is not climatological.
+  ffwi_hours: 12
+  ffwi_scale: 25.0
+  ffwi_min_accept: 0.1
+
+# Spatial-block split (leakage control): the study bbox is cut into
+# block_deg x block_deg blocks; whole blocks are assigned to one split.
+split:
+  block_deg: 0.5
+  val_blocks: 3
+  test_blocks: 4
+
+# Horizon bands: each band has its own cell size so the 128x128 window covers
+# plausible spread for its horizons.
+bands:
+  short:
+    cell_m: 30
+    scenarios: 800
+    t0_hours: [1.0, 2.0, 4.0]
+    horizons_min: [10, 30, 60]
+  medium:
+    cell_m: 60
+    scenarios: 800
+    t0_hours: [2, 6, 12, 24]
+    horizons_min: [360, 720]
+  long:
+    cell_m: 120
+    scenarios: 800
+    t0_hours: [6, 12, 24, 48]
+    horizons_min: [1440, 2880, 4320]

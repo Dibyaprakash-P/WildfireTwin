@@ -1,0 +1,28 @@
+# Fourier Neural Operator (main model). Defaults, not tuned optima.
+experiment:
+  name: wildfiretwin_fno
+  seed: 42
+data:
+  dataset_version: wtrs-ncal-v1
+  bands: [short, medium, long]
+  grid_size: 128
+  augment: true
+model:
+  type: fno
+  modes: 20        # Fourier modes kept per axis (of 64 available on a 128 grid)
+  width: 48        # hidden channels
+  layers: 4        # Fourier layers
+  padding: 16      # zero-padding for non-periodic boundaries
+training:
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 40
+  early_stopping_patience: 8
+  bce_weight: 1.0
+  dice_weight: 1.0
+physics:
+  enabled: false
+evaluation:
+  threshold: 0.5
+  metrics: [iou, dice, growth_iou, growth_f1, precision, recall, hausdorff, hd95, mae, inference_time, speedup]

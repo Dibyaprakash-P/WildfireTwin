@@ -1,0 +1,56 @@
+{
+  "rows": 918,
+  "columns": [
+    "event_id",
+    "irwinid",
+    "incid_name",
+    "incid_type",
+    "map_id",
+    "map_prog",
+    "asmnt_type",
+    "burnbndac",
+    "burnbndlat",
+    "burnbndlon",
+    "ig_date",
+    "pre_id",
+    "post_id",
+    "perim_id",
+    "dnbr_offst",
+    "dnbr_stddv",
+    "nodata_t",
+    "incgreen_t",
+    "low_t",
+    "mod_t",
+    "high_t",
+    "comment",
+    "dnbr_val",
+    "prenbr_val",
+    "posnbr_val",
+    "cbi",
+    "sb_id",
+    "field_date",
+    "examiners",
+    "frg",
+    "om1",
+    "om2",
+    "om3",
+    "nvc",
+    "bps",
+    "geometry"
+  ],
+  "crs": "GEOGCS[\"GCS_North_American_1983\",DATUM[\"D_North_American_1983\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]]",
+  "bbox_filter": [
+    -125.0,
+    39.5,
+    -121.5,
+    42.5
+  ],
+  "range_ig_date": [
+    "1984-07-02",
+    "2026-08-05"
+  ],
+  "range_field_date": [
+    "",
+    "2009-11-03"
+  ]
+}

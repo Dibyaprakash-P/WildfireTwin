@@ -1,0 +1,41 @@
+{
+  "output": "data/processed/weather/era5_ncal_hourly.nc",
+  "time_min": "2024-01-01T00:00:00",
+  "time_max": "2025-12-31T23:00:00",
+  "n_times": 17544,
+  "lat": [
+    39.75,
+    42.0
+  ],
+  "lon": [
+    -124.5,
+    -121.75
+  ],
+  "grid_deg": 0.25,
+  "variables": {
+    "temperature_c": "degC",
+    "dewpoint_c": "degC",
+    "relative_humidity_pct": "%",
+    "wind_u_ms": "m s-1",
+    "wind_v_ms": "m s-1",
+    "precip_mm": "mm (hourly accumulation)",
+    "soil_moisture_m3m3": "m3 m-3",
+    "lai_hv": "m2 m-2",
+    "lai_lv": "m2 m-2",
+    "cvh": "0-1",
+    "cvl": "0-1"
+  },
+  "nan_fraction": {
+    "temperature_c": 0.0,
+    "dewpoint_c": 0.0,
+    "relative_humidity_pct": 0.0,
+    "wind_u_ms": 0.0,
+    "wind_v_ms": 0.0,
+    "precip_mm": 0.0,
+    "soil_moisture_m3m3": 0.0,
+    "lai_hv": 0.0,
+    "lai_lv": 0.0,
+    "cvh": 0.0,
+    "cvl": 0.0
+  }
+}

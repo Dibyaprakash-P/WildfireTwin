@@ -1,0 +1,39 @@
+experiment:
+  name: wildfiretwin_unet
+  seed: 42
+data:
+  dataset_version: wtrs-ncal-v1
+  bands:
+  - short
+  - medium
+  - long
+  grid_size: 128
+  augment: true
+model:
+  type: unet
+  base: 32
+  depth: 4
+training:
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 40
+  early_stopping_patience: 8
+  bce_weight: 1.0
+  dice_weight: 1.0
+physics:
+  enabled: false
+evaluation:
+  threshold: 0.5
+  metrics:
+  - iou
+  - dice
+  - growth_iou
+  - growth_f1
+  - precision
+  - recall
+  - hausdorff
+  - hd95
+  - mae
+  - inference_time
+  - speedup

@@ -1,0 +1,45 @@
+# WildfireTwin Python dependencies (versions verified on Python 3.14, Windows 11).
+# PyTorch: install separately for your hardware, e.g.
+#   CUDA 12.8:  pip install torch --index-url https://download.pytorch.org/whl/cu128
+#   CPU only:   pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# --- API / backend
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+pymongo==4.18.2
+email-validator==2.3.0
+argon2-cffi==25.1.0
+PyJWT==2.15.1
+httpx==0.28.1
+google-auth==2.59.1
+python-multipart==0.0.32
+PyYAML==6.0.3
+pillow==12.3.0
+
+# --- scientific / geospatial
+numpy==2.5.3
+pandas==3.0.6
+pyarrow==25.0.1
+scipy==1.18.1
+rasterio==1.5.2
+pyproj==3.8.0
+shapely==2.1.2
+geopandas==1.2.0
+pyshp==3.1.6
+xarray==2026.9.0
+netCDF4==1.7.4
+eccodes==2.49.0
+duckdb==1.5.6
+scikit-image==0.26.0
+matplotlib==3.11.2
+
+# --- ML experiment tracking (optional)
+mlflow-skinny==3.16.1
+SQLAlchemy==2.1.1
+alembic==1.20.0
+
+# --- tests
+pytest==9.1.1
+pytest-asyncio==1.4.0

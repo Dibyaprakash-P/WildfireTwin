@@ -1,0 +1,39 @@
+# WildfireTwin: frontend + backend + MongoDB.
+# ML training, dataset generation and FARSITE/FlamMap remain local/offline (see docs/setup.md).
+#   cp .env.example .env   # set JWT_SECRET etc.
+#   docker compose up --build
+# Open http://localhost:8090 (or the port in WT_WEB_PORT)
+services:
+  mongodb:
+    image: mongo:8.0
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017
+      CORS_ORIGINS: http://localhost:8090
+      INFERENCE_DEVICE: cpu
+    volumes:
+      - ./datasets:/app/datasets:ro      # raw downloads (read-only)
+      - ./data:/app/data                 # processed data, trained models, predictions
+    depends_on: [mongodb]
+    ports:
+      - "8001:8000"   # host 8001 so it can run alongside a local dev backend on 8000
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_CESIUM_ION_TOKEN: ${VITE_CESIUM_ION_TOKEN:-}
+    depends_on: [backend]
+    ports:
+      - "${WT_WEB_PORT:-8090}:80"   # change with WT_WEB_PORT if 8090 is taken
+
+volumes:
+  mongo-data:

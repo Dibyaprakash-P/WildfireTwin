@@ -1,0 +1,44 @@
+# WildfireTwin data-source registry.
+# Paths are relative to the repository root. Raw files stay where the user
+# downloaded them (datasets/) — nothing is copied or moved. Processed products
+# are written under data/processed/.
+
+study_region:
+  # Intersection of the LANDFIRE FBFM40 download, the SRTM tiles and the
+  # ESA WorldCover tiles found in datasets/ (see data/DATA_INVENTORY.md).
+  name: "Northern California (Klamath / North Coast Ranges)"
+  bbox_wgs84: [-124.5, 40.0, -122.0, 42.0]   # [west, south, east, north]
+  analysis_crs: "EPSG:5070"                   # LANDFIRE native CONUS Albers (equal-area, metres)
+
+firms:
+  raw_glob: "datasets/DL_FIRE_*/*.csv"
+  products:
+    "SV-C2": {satellite: "Suomi NPP", instrument: "VIIRS", collection: "C2", nominal_resolution_m: 375}
+    "J1V-C2": {satellite: "NOAA-20", instrument: "VIIRS", collection: "C2", nominal_resolution_m: 375}
+    "J2V-C2": {satellite: "NOAA-21", instrument: "VIIRS", collection: "C2", nominal_resolution_m: 375}
+    "M-C61": {satellite: "Terra/Aqua", instrument: "MODIS", collection: "C6.1", nominal_resolution_m: 1000}
+  processed_region: "data/processed/firms/firms_region.parquet"
+  processed_recent: "data/processed/firms/firms_recent_global.parquet"
+  recent_days: 10
+
+era5:
+  files:
+    - {path: "datasets/9e8edc88f97ea40e647c4e85e9b22c36/data.grib", year: 2024}
+    - {path: "datasets/166329fabdae579dfe5b9ebbb7d452b2/data.grib", year: 2025}
+  processed: "data/processed/weather/era5_ncal_hourly.nc"
+
+srtm:
+  glob: "datasets/n*_w*_1arc_v3.tif"
+  processed_mosaic: "data/processed/rasters/srtm_mosaic_4326.tif"
+
+landfire_fbfm40:
+  path: "datasets/landfire_1971d627-499d-41ea-8e91-bc3f3256ac1a/LF2025_FBFM40_CONUS/LF2025_FBFM40_CONUS.tif"
+
+worldcover:
+  glob: "datasets/terrascope_download_*/WORLDCOVER/ESA_WORLDCOVER_10M_2021_V200/MAP/*/*_Map.tif"
+  processed_mosaic: "data/processed/rasters/worldcover_100m_4326.tif"
+
+mtbs:
+  perimeters_zip: "datasets/bsp_zmysxvwg6simrvuefqrx/burn_severity_perimeter_data.zip"
+  severity_mosaic_zips: "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_*.zip"
+  processed_perimeters: "data/processed/vectors/mtbs_perimeters_region.geojson"

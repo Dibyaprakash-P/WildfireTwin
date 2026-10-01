@@ -1,0 +1,12 @@
+# keep the 40 GB of raw data and generated artefacts out of the build context
+datasets/
+data/
+tools/
+.venv/
+frontend/node_modules/
+frontend/dist/
+Research Papers/
+mlflow.db
+mlruns/
+**/__pycache__/
+.env

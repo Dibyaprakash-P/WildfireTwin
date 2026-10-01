@@ -1,0 +1,37 @@
+# secrets
+.env
+frontend/.env
+frontend/.env.local
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# node
+frontend/node_modules/
+frontend/dist/
+
+# large local data and generated artefacts
+datasets/
+data/processed/
+data/predictions/
+data/simulations/
+data/mongo/
+data/models/**/model.pt
+data/backend.log
+tools/
+mlflow.db
+mlruns/
+
+# local-only artefacts (never publish)
+data/.dev_token
+data/_*.json
+data/*.log
+data/models/logs/
+data/models/*/*/model.pt
+.claude/
+
+# third-party copyrighted PDFs (see research/literature_review.md for citations)
+Research Papers/

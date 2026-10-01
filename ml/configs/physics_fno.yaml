@@ -1,0 +1,34 @@
+# Physics-informed FNO (advanced model). Same backbone as fno.yaml.
+experiment:
+  name: wildfiretwin_physics_fno
+  seed: 42
+data:
+  dataset_version: wtrs-ncal-v1
+  bands: [short, medium, long]
+  grid_size: 128
+  augment: true
+model:
+  type: physics_fno
+  modes: 20
+  width: 48
+  layers: 4
+  padding: 16
+  sharpness: 0.1   # p = sigmoid((1 - tau) / sharpness)
+training:
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 40
+  early_stopping_patience: 8
+  bce_weight: 1.0
+  dice_weight: 1.0
+  tau_weight: 1.0          # arrival-time supervision (Huber on normalised tau)
+physics:
+  enabled: true
+  lambda_eik: 0.1          # eikonal residual weight
+  lambda_mono: 1.0         # irreversibility
+  lambda_nb: 1.0           # non-burnable fuel
+  warmup_epochs: 2         # physics weights ramp linearly from 0 over these epochs
+evaluation:
+  threshold: 0.5
+  metrics: [iou, dice, growth_iou, growth_f1, precision, recall, hausdorff, hd95, mae, inference_time, speedup]

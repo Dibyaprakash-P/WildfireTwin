@@ -1,0 +1,29 @@
+# Alert-engine rules. All thresholds are configurable DEFAULTS for a research
+# prototype; they are not official emergency criteria.
+#
+# A change only produces an alert when it exceeds the threshold. Severity is
+# the highest level whose condition is met (INFO < WARNING < HIGH < CRITICAL).
+
+weather_change:            # compares the latest weather snapshot to the previous one for a fire
+  wind_speed_delta_ms:     {WARNING: 4.0, HIGH: 7.0, CRITICAL: 10.0}
+  wind_direction_delta_deg:                # only evaluated when both speeds >= min_speed_ms
+    min_speed_ms: 3.0
+    levels: {INFO: 45, WARNING: 90, HIGH: 135}
+  temperature_delta_c:     {INFO: 3.0, WARNING: 5.0}
+  humidity_drop_pct:       {INFO: 10.0, WARNING: 15.0, HIGH: 25.0}   # absolute RH points, decreases only
+  low_humidity_pct:        {HIGH: 15.0}                              # new value at or below
+
+fire_activity_change:      # compares FIRMS event state between refreshes
+  detection_count_ratio:   {INFO: 1.5, WARNING: 2.0, HIGH: 4.0}     # new / previous count
+  min_new_detections: 5
+  frp_ratio:               {WARNING: 2.0, HIGH: 4.0}
+
+prediction_change:         # compares predicted area per horizon between consecutive predictions
+  area_change_pct:         {INFO: 20.0, WARNING: 50.0, HIGH: 100.0}
+  min_area_km2: 0.05       # ignore changes on negligible areas
+  # A prediction difference criterion is also applied to the probability fields:
+  # mean |p_new - p_old| over the window.
+  mean_abs_prob_diff:      {INFO: 0.01, WARNING: 0.03}
+
+spread_risk_change:        # predicted growth reaching the analysis-window edge
+  edge_reached_horizons: [360, 720, 1440]      # minutes; WARNING if reached at these horizons

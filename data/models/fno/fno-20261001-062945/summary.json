@@ -1,0 +1,28 @@
+{
+  "run_id": "fno-20261001-062945",
+  "model_type": "fno",
+  "best_epoch": 33,
+  "best_val_growth_iou": 0.6463347486790695,
+  "best_val": {
+    "epoch": 33,
+    "train_bce": 0.010928474069302469,
+    "train_dice": 0.10019666646625805,
+    "train_total": 0.11112514036209911,
+    "epoch_s": 81.16311311721802,
+    "val_bce": 0.014325280173463708,
+    "val_dice": 0.1923308291650833,
+    "val_total": 0.20665610859051664,
+    "val_iou": 0.7251148765668258,
+    "val_growth_iou": 0.6463347486790695
+  },
+  "epochs_run": 40,
+  "train_seconds": 3413.7301065921783,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5050 Laptop GPU",
+  "n_params": 7395601,
+  "dataset_version": "wtrs-ncal-v1",
+  "dev_mode": false,
+  "train_samples": 14447,
+  "val_samples": 1500,
+  "finished_utc": "2026-10-01T07:26:43.204513+00:00"
+}

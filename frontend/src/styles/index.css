@@ -1,0 +1,57 @@
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+@import "@fontsource/inter/400.css";
+@import "cesium/Build/Cesium/Widgets/widgets.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens (RGB triplets for Tailwind alpha support). The application is dark-only by design. */
+:root {
+  --c-bg: 10 12 15;         /* near-black */
+  --c-panel: 15 18 22;      /* charcoal */
+  --c-raised: 21 25 31;
+  --c-line: 34 41 51;       /* thin technical borders */
+  --c-ink: 200 206 214;     /* body text */
+  --c-head: 242 244 247;    /* headings */
+  --c-dim: 128 138 150;     /* secondary text (WCAG AA on panel) */
+  --c-fire: 255 122 26;     /* restrained wildfire orange */
+  --c-ok: 61 207 122;
+  --c-warn: 232 179 57;
+  --c-crit: 229 72 77;
+  --c-info: 76 195 217;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-bg text-ink font-mono text-sm antialiased;
+  margin: 0;
+}
+
+*:focus-visible { outline: 1px solid rgb(var(--c-fire)); outline-offset: 1px; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgb(var(--c-panel)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--c-line)); }
+
+@layer components {
+  .panel { @apply bg-panel border border-line; }
+  .panel-title { @apply flex items-center justify-between px-3 h-8 border-b border-line text-2xs tracking-[0.12em] uppercase text-dim; }
+  .kv { @apply grid grid-cols-[minmax(110px,40%)_1fr] gap-x-3 py-[3px] text-xs; }
+  .kv dt { @apply text-dim uppercase tracking-wider text-2xs pt-[1px]; }
+  .kv dd { @apply text-ink m-0 tabular-nums break-words; }
+  .btn { @apply inline-flex items-center justify-center gap-2 h-8 px-3 border border-line bg-raised text-xs uppercase tracking-wider text-ink hover:border-dim disabled:opacity-40 disabled:cursor-not-allowed transition-colors; }
+  .btn-primary { @apply btn border-fire/70 text-fire hover:bg-fire/10 hover:border-fire; }
+  .input { @apply h-8 w-full bg-bg border border-line px-2 text-xs text-head placeholder:text-dim/70 focus:border-fire/70 outline-none; }
+  .label { @apply block text-2xs uppercase tracking-[0.14em] text-dim mb-1; }
+  .tag { @apply inline-flex items-center gap-1 px-1.5 h-[18px] border text-2xs uppercase tracking-wider; }
+  .rule { @apply border-t border-line; }
+}
+
+/* Cesium chrome restyled to the technical theme */
+.cesium-viewer-bottom { display: none !important; }
+.cesium-widget-credits { display: none !important; }
+.cesium-viewer { font-family: "JetBrains Mono", monospace; }
