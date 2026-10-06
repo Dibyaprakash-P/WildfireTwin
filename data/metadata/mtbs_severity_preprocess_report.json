@@ -1,0 +1,1143 @@
+{
+  "generated_utc": "2026-10-05T07:41:51.807050+00:00",
+  "processing_version": "mtbs-severity-1.0",
+  "product": "MTBS thematic burn-severity mosaic (categorical)",
+  "data_class": "observed",
+  "role": "Historical validation context (post-fire severity). NOT a training target or model input.",
+  "output_dir": "data/processed/rasters/mtbs_severity",
+  "years": [
+    {
+      "year": 2020,
+      "processing_version": "mtbs-severity-1.0",
+      "processed_utc": "2026-10-05T07:41:26.899371+00:00",
+      "data_class": "observed",
+      "output_crs": "EPSG:5070",
+      "output_resolution_m": 30.0,
+      "resampling": "nearest",
+      "study_region_wgs84": [
+        -124.5,
+        40.0,
+        -122.0,
+        42.0
+      ],
+      "source_file": "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_2020.zip",
+      "source_sha256": "1b18e5088fbf805f9793da84c1afdb56a61353157f8bfc84d0f980dccefe9230",
+      "source_size_bytes": 8645082,
+      "source": {
+        "members": [
+          "mtbs_CA_2020.tif",
+          "mtbs_CA_2020.xml"
+        ],
+        "raster_member": "mtbs_CA_2020.tif",
+        "metadata_member": "mtbs_CA_2020.xml",
+        "crs": "EPSG:5070",
+        "epsg": 5070,
+        "transform": [
+          30.0,
+          0.0,
+          -2321445.0,
+          0.0,
+          -30.0,
+          2454765.0
+        ],
+        "bounds": [
+          -2321445.0,
+          1276095.0,
+          -1718865.0,
+          2454765.0
+        ],
+        "bounds_wgs84": [
+          -124.61915,
+          31.80536,
+          -114.63551,
+          43.33096
+        ],
+        "width": 20086,
+        "height": 39289,
+        "resolution": [
+          30.0,
+          30.0
+        ],
+        "bands": 1,
+        "dtype": "uint8",
+        "nodata": 0.0,
+        "band_descriptions": [
+          null
+        ],
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "colormap": {
+          "0": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "1": [
+            0,
+            128,
+            128,
+            255
+          ],
+          "2": [
+            82,
+            204,
+            204,
+            255
+          ],
+          "3": [
+            255,
+            232,
+            32,
+            255
+          ],
+          "4": [
+            168,
+            0,
+            0,
+            255
+          ],
+          "5": [
+            57,
+            181,
+            74,
+            255
+          ],
+          "6": [
+            255,
+            255,
+            255,
+            255
+          ]
+        }
+      },
+      "source_stats": {
+        "value_counts": {
+          "0": 769991442,
+          "1": 2649035,
+          "2": 7262496,
+          "3": 5255899,
+          "4": 3943011,
+          "5": 40984,
+          "6": 15987
+        },
+        "pixels": 789158854,
+        "nodata_pixels": 769991442,
+        "valid_pixels": 19167412,
+        "valid_pct": 2.4288
+      },
+      "class_definitions": {
+        "0": "Background/No Data",
+        "1": "Unburned/Underburned to Low Burn Severity",
+        "2": "Low burn severity",
+        "3": "Moderate burn severity",
+        "4": "High Burn Severity",
+        "5": "Increased Greenness/Increased Vegetation Response",
+        "6": "Non-Processing Area Mask"
+      },
+      "source_metadata": {
+        "title": "Monitoring Trends in Burn Severity Thematic Burn Severity Mosaic for California in 2020",
+        "publication_date": "20260918",
+        "origin": [
+          "U.S. Geological Survey",
+          "USDA Forest Service"
+        ],
+        "doi": "https://doi.org/10.5066/P9NETC0T",
+        "time_period": "2020",
+        "class_method": "MTBS thematic burn severity classes are thresholded from continuous dNBR images or NBR images when pre-fire images are not available. Thresholds are based on interpretation by MTBS analysts."
+      },
+      "study_region_intersection": {
+        "intersects": true,
+        "source_window": [
+          0,
+          0,
+          6974,
+          8960
+        ],
+        "pixel_aligned_copy": true,
+        "nodata": 0
+      },
+      "transforms": [
+        {
+          "source": "MTBS severity 2020",
+          "src_crs": "EPSG:5070",
+          "dst_crs": "EPSG:5070",
+          "resampling": "nearest",
+          "src_res": 30.0,
+          "dst_res": 30.0,
+          "reprojected": false
+        }
+      ],
+      "status": "processed",
+      "message": "MTBS 2020 processed successfully",
+      "output_path": "data/processed/rasters/mtbs_severity/mtbs_severity_2020.tif",
+      "output_bounds": [
+        -2375775.0,
+        2186055.0,
+        -2112315.0,
+        2459865.0
+      ],
+      "output_shape": [
+        9127,
+        8782
+      ],
+      "output_nodata": 0,
+      "output_value_counts": {
+        "0": 75384662,
+        "1": 773121,
+        "2": 1508653,
+        "3": 1115025,
+        "4": 1368760,
+        "5": 1241,
+        "6": 1852
+      },
+      "valid_pixel_count": 4768652,
+      "nodata_pixel_count": 75384662,
+      "class_area_km2_in_domain": {
+        "1": 695.8089,
+        "2": 1357.7877,
+        "3": 1003.5225,
+        "4": 1231.884,
+        "5": 1.1169,
+        "6": 1.6668
+      }
+    },
+    {
+      "year": 2021,
+      "processing_version": "mtbs-severity-1.0",
+      "processed_utc": "2026-10-05T07:41:32.928710+00:00",
+      "data_class": "observed",
+      "output_crs": "EPSG:5070",
+      "output_resolution_m": 30.0,
+      "resampling": "nearest",
+      "study_region_wgs84": [
+        -124.5,
+        40.0,
+        -122.0,
+        42.0
+      ],
+      "source_file": "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_2021.zip",
+      "source_sha256": "cb8b8c0255e248914a64de273d8b430ae928e18ec622bd5d6b606ca2c38072ea",
+      "source_size_bytes": 6851988,
+      "source": {
+        "members": [
+          "mtbs_CA_2021.tif",
+          "mtbs_CA_2021.xml"
+        ],
+        "raster_member": "mtbs_CA_2021.tif",
+        "metadata_member": "mtbs_CA_2021.xml",
+        "crs": "EPSG:5070",
+        "epsg": 5070,
+        "transform": [
+          30.0,
+          0.0,
+          -2278485.0,
+          0.0,
+          -30.0,
+          2403375.0
+        ],
+        "bounds": [
+          -2278485.0,
+          1281585.0,
+          -1719765.0,
+          2403375.0
+        ],
+        "bounds_wgs84": [
+          -123.93905,
+          31.95209,
+          -114.65655,
+          42.88069
+        ],
+        "width": 18624,
+        "height": 37393,
+        "resolution": [
+          30.0,
+          30.0
+        ],
+        "bands": 1,
+        "dtype": "uint8",
+        "nodata": 0.0,
+        "band_descriptions": [
+          null
+        ],
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "colormap": {
+          "0": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "1": [
+            0,
+            128,
+            128,
+            255
+          ],
+          "2": [
+            82,
+            204,
+            204,
+            255
+          ],
+          "3": [
+            255,
+            232,
+            32,
+            255
+          ],
+          "4": [
+            168,
+            0,
+            0,
+            255
+          ],
+          "5": [
+            57,
+            181,
+            74,
+            255
+          ],
+          "6": [
+            255,
+            255,
+            255,
+            255
+          ]
+        }
+      },
+      "source_stats": {
+        "value_counts": {
+          "0": 685024139,
+          "1": 1644239,
+          "2": 3999914,
+          "3": 3188190,
+          "4": 2516728,
+          "5": 22724,
+          "6": 11298
+        },
+        "pixels": 696407232,
+        "nodata_pixels": 685024139,
+        "valid_pixels": 11383093,
+        "valid_pct": 1.6345
+      },
+      "class_definitions": {
+        "0": "Background/No Data",
+        "1": "Unburned/Underburned to Low Burn Severity",
+        "2": "Low burn severity",
+        "3": "Moderate burn severity",
+        "4": "High Burn Severity",
+        "5": "Increased Greenness/Increased Vegetation Response",
+        "6": "Non-Processing Area Mask"
+      },
+      "source_metadata": {
+        "title": "Monitoring Trends in Burn Severity Thematic Burn Severity Mosaic for California in 2021",
+        "publication_date": "20260918",
+        "origin": [
+          "U.S. Geological Survey",
+          "USDA Forest Service"
+        ],
+        "doi": "https://doi.org/10.5066/P9NETC0T",
+        "time_period": "2021",
+        "class_method": "MTBS thematic burn severity classes are thresholded from continuous dNBR images or NBR images when pre-fire images are not available. Thresholds are based on interpretation by MTBS analysts."
+      },
+      "study_region_intersection": {
+        "intersects": true,
+        "source_window": [
+          0,
+          0,
+          5542,
+          7247
+        ],
+        "pixel_aligned_copy": true,
+        "nodata": 0
+      },
+      "transforms": [
+        {
+          "source": "MTBS severity 2021",
+          "src_crs": "EPSG:5070",
+          "dst_crs": "EPSG:5070",
+          "resampling": "nearest",
+          "src_res": 30.0,
+          "dst_res": 30.0,
+          "reprojected": false
+        }
+      ],
+      "status": "processed",
+      "message": "MTBS 2021 processed successfully",
+      "output_path": "data/processed/rasters/mtbs_severity/mtbs_severity_2021.tif",
+      "output_bounds": [
+        -2375775.0,
+        2186055.0,
+        -2112315.0,
+        2459865.0
+      ],
+      "output_shape": [
+        9127,
+        8782
+      ],
+      "output_nodata": 0,
+      "output_value_counts": {
+        "0": 76335792,
+        "1": 591863,
+        "2": 1406162,
+        "3": 1038321,
+        "4": 775188,
+        "5": 3590,
+        "6": 2398
+      },
+      "valid_pixel_count": 3817522,
+      "nodata_pixel_count": 76335792,
+      "class_area_km2_in_domain": {
+        "1": 532.6767,
+        "2": 1265.5458,
+        "3": 934.4889,
+        "4": 697.6692,
+        "5": 3.231,
+        "6": 2.1582
+      }
+    },
+    {
+      "year": 2022,
+      "processing_version": "mtbs-severity-1.0",
+      "processed_utc": "2026-10-05T07:41:37.864583+00:00",
+      "data_class": "observed",
+      "output_crs": "EPSG:5070",
+      "output_resolution_m": 30.0,
+      "resampling": "nearest",
+      "study_region_wgs84": [
+        -124.5,
+        40.0,
+        -122.0,
+        42.0
+      ],
+      "source_file": "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_2022.zip",
+      "source_sha256": "04cf13069942bd0d0671f64b3d56b0f857db93546e6a42a9ffc4faaabd3194d1",
+      "source_size_bytes": 5630174,
+      "source": {
+        "members": [
+          "mtbs_CA_2022.tif",
+          "mtbs_CA_2022.xml"
+        ],
+        "raster_member": "mtbs_CA_2022.tif",
+        "metadata_member": "mtbs_CA_2022.xml",
+        "crs": "EPSG:5070",
+        "epsg": 5070,
+        "transform": [
+          30.0,
+          0.0,
+          -2284785.0,
+          0.0,
+          -30.0,
+          2417385.0
+        ],
+        "bounds": [
+          -2284785.0,
+          1265325.0,
+          -1678155.0,
+          2417385.0
+        ],
+        "bounds_wgs84": [
+          -124.06118,
+          31.79652,
+          -114.1829,
+          43.08511
+        ],
+        "width": 20221,
+        "height": 38402,
+        "resolution": [
+          30.0,
+          30.0
+        ],
+        "bands": 1,
+        "dtype": "uint8",
+        "nodata": 0.0,
+        "band_descriptions": [
+          null
+        ],
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "colormap": {
+          "0": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "1": [
+            0,
+            128,
+            128,
+            255
+          ],
+          "2": [
+            82,
+            204,
+            204,
+            255
+          ],
+          "3": [
+            255,
+            232,
+            32,
+            255
+          ],
+          "4": [
+            168,
+            0,
+            0,
+            255
+          ],
+          "5": [
+            57,
+            181,
+            74,
+            255
+          ],
+          "6": [
+            255,
+            255,
+            255,
+            255
+          ]
+        }
+      },
+      "source_stats": {
+        "value_counts": {
+          "0": 775142593,
+          "1": 99110,
+          "2": 526636,
+          "3": 427785,
+          "4": 326991,
+          "5": 1138,
+          "6": 2589
+        },
+        "pixels": 776526842,
+        "nodata_pixels": 775142593,
+        "valid_pixels": 1384249,
+        "valid_pct": 0.1783
+      },
+      "class_definitions": {
+        "0": "Background/No Data",
+        "1": "Unburned/Underburned to Low Burn Severity",
+        "2": "Low burn severity",
+        "3": "Moderate burn severity",
+        "4": "High Burn Severity",
+        "5": "Increased Greenness/Increased Vegetation Response",
+        "6": "Non-Processing Area Mask"
+      },
+      "source_metadata": {
+        "title": "Monitoring Trends in Burn Severity Thematic Burn Severity Mosaic for California in 2022",
+        "publication_date": "20260918",
+        "origin": [
+          "U.S. Geological Survey",
+          "USDA Forest Service"
+        ],
+        "doi": "https://doi.org/10.5066/P9NETC0T",
+        "time_period": "2022",
+        "class_method": "MTBS thematic burn severity classes are thresholded from continuous dNBR images or NBR images when pre-fire images are not available. Thresholds are based on interpretation by MTBS analysts."
+      },
+      "study_region_intersection": {
+        "intersects": true,
+        "source_window": [
+          0,
+          0,
+          5752,
+          7714
+        ],
+        "pixel_aligned_copy": true,
+        "nodata": 0
+      },
+      "transforms": [
+        {
+          "source": "MTBS severity 2022",
+          "src_crs": "EPSG:5070",
+          "dst_crs": "EPSG:5070",
+          "resampling": "nearest",
+          "src_res": 30.0,
+          "dst_res": 30.0,
+          "reprojected": false
+        }
+      ],
+      "status": "processed",
+      "message": "MTBS 2022 processed successfully",
+      "output_path": "data/processed/rasters/mtbs_severity/mtbs_severity_2022.tif",
+      "output_bounds": [
+        -2375775.0,
+        2186055.0,
+        -2112315.0,
+        2459865.0
+      ],
+      "output_shape": [
+        9127,
+        8782
+      ],
+      "output_nodata": 0,
+      "output_value_counts": {
+        "0": 79573549,
+        "1": 34176,
+        "2": 221732,
+        "3": 174858,
+        "4": 147581,
+        "5": 255,
+        "6": 1163
+      },
+      "valid_pixel_count": 579765,
+      "nodata_pixel_count": 79573549,
+      "class_area_km2_in_domain": {
+        "1": 30.7584,
+        "2": 199.5588,
+        "3": 157.3722,
+        "4": 132.8229,
+        "5": 0.2295,
+        "6": 1.0467
+      }
+    },
+    {
+      "year": 2023,
+      "processing_version": "mtbs-severity-1.0",
+      "processed_utc": "2026-10-05T07:41:42.731780+00:00",
+      "data_class": "observed",
+      "output_crs": "EPSG:5070",
+      "output_resolution_m": 30.0,
+      "resampling": "nearest",
+      "study_region_wgs84": [
+        -124.5,
+        40.0,
+        -122.0,
+        42.0
+      ],
+      "source_file": "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_2023.zip",
+      "source_sha256": "ed2a3d347e66f3f70aa04e575d60275648bcd862be04313c54678ca04921fd9d",
+      "source_size_bytes": 5635878,
+      "source": {
+        "members": [
+          "mtbs_CA_2023.tif",
+          "mtbs_CA_2023.xml"
+        ],
+        "raster_member": "mtbs_CA_2023.tif",
+        "metadata_member": "mtbs_CA_2023.xml",
+        "crs": "EPSG:5070",
+        "epsg": 5070,
+        "transform": [
+          30.0,
+          0.0,
+          -2288685.0,
+          0.0,
+          -30.0,
+          2453925.0
+        ],
+        "bounds": [
+          -2288685.0,
+          1248555.0,
+          -1705335.0,
+          2453925.0
+        ],
+        "bounds_wgs84": [
+          -124.2358,
+          31.64198,
+          -114.4353,
+          43.35068
+        ],
+        "width": 19445,
+        "height": 40179,
+        "resolution": [
+          30.0,
+          30.0
+        ],
+        "bands": 1,
+        "dtype": "uint8",
+        "nodata": 0.0,
+        "band_descriptions": [
+          null
+        ],
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "colormap": {
+          "0": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "1": [
+            0,
+            128,
+            128,
+            255
+          ],
+          "2": [
+            82,
+            204,
+            204,
+            255
+          ],
+          "3": [
+            255,
+            232,
+            32,
+            255
+          ],
+          "4": [
+            168,
+            0,
+            0,
+            255
+          ],
+          "5": [
+            57,
+            181,
+            74,
+            255
+          ],
+          "6": [
+            255,
+            255,
+            255,
+            255
+          ]
+        }
+      },
+      "source_stats": {
+        "value_counts": {
+          "0": 779705311,
+          "1": 166056,
+          "2": 903676,
+          "3": 317472,
+          "4": 187190,
+          "5": 538,
+          "6": 412
+        },
+        "pixels": 781280655,
+        "nodata_pixels": 779705311,
+        "valid_pixels": 1575344,
+        "valid_pct": 0.2016
+      },
+      "class_definitions": {
+        "0": "Background/No Data",
+        "1": "Unburned/Underburned to Low Burn Severity",
+        "2": "Low burn severity",
+        "3": "Moderate burn severity",
+        "4": "High Burn Severity",
+        "5": "Increased Greenness/Increased Vegetation Response",
+        "6": "Non-Processing Area Mask"
+      },
+      "source_metadata": {
+        "title": "Monitoring Trends in Burn Severity Thematic Burn Severity Mosaic for California in 2023",
+        "publication_date": "20260918",
+        "origin": [
+          "U.S. Geological Survey",
+          "USDA Forest Service"
+        ],
+        "doi": "https://doi.org/10.5066/P9NETC0T",
+        "time_period": "2023",
+        "class_method": "MTBS thematic burn severity classes are thresholded from continuous dNBR images or NBR images when pre-fire images are not available. Thresholds are based on interpretation by MTBS analysts."
+      },
+      "study_region_intersection": {
+        "intersects": true,
+        "source_window": [
+          0,
+          0,
+          5882,
+          8932
+        ],
+        "pixel_aligned_copy": true,
+        "nodata": 0
+      },
+      "transforms": [
+        {
+          "source": "MTBS severity 2023",
+          "src_crs": "EPSG:5070",
+          "dst_crs": "EPSG:5070",
+          "resampling": "nearest",
+          "src_res": 30.0,
+          "dst_res": 30.0,
+          "reprojected": false
+        }
+      ],
+      "status": "processed",
+      "message": "MTBS 2023 processed successfully",
+      "output_path": "data/processed/rasters/mtbs_severity/mtbs_severity_2023.tif",
+      "output_bounds": [
+        -2375775.0,
+        2186055.0,
+        -2112315.0,
+        2459865.0
+      ],
+      "output_shape": [
+        9127,
+        8782
+      ],
+      "output_nodata": 0,
+      "output_value_counts": {
+        "0": 79284796,
+        "1": 87076,
+        "2": 354501,
+        "3": 251542,
+        "4": 174852,
+        "5": 173,
+        "6": 374
+      },
+      "valid_pixel_count": 868518,
+      "nodata_pixel_count": 79284796,
+      "class_area_km2_in_domain": {
+        "1": 78.3684,
+        "2": 319.0509,
+        "3": 226.3878,
+        "4": 157.3668,
+        "5": 0.1557,
+        "6": 0.3366
+      }
+    },
+    {
+      "year": 2024,
+      "processing_version": "mtbs-severity-1.0",
+      "processed_utc": "2026-10-05T07:41:47.695513+00:00",
+      "data_class": "observed",
+      "output_crs": "EPSG:5070",
+      "output_resolution_m": 30.0,
+      "resampling": "nearest",
+      "study_region_wgs84": [
+        -124.5,
+        40.0,
+        -122.0,
+        42.0
+      ],
+      "source_file": "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_2024.zip",
+      "source_sha256": "c52cb40ec0d56b87fb6a31d2ea2243ccc83dd229080ec1f5e9b7c29e11bd5255",
+      "source_size_bytes": 3418880,
+      "source": {
+        "members": [
+          "mtbs_CA_2024.tif",
+          "mtbs_CA_2024.xml"
+        ],
+        "raster_member": "mtbs_CA_2024.tif",
+        "metadata_member": "mtbs_CA_2024.xml",
+        "crs": "EPSG:5070",
+        "epsg": 5070,
+        "transform": [
+          30.0,
+          0.0,
+          -2303865.0,
+          0.0,
+          -30.0,
+          2360505.0
+        ],
+        "bounds": [
+          -2303865.0,
+          1435605.0,
+          -1899255.0,
+          2360505.0
+        ],
+        "bounds_wgs84": [
+          -124.08162,
+          33.22745,
+          -116.9071,
+          42.13345
+        ],
+        "width": 13487,
+        "height": 30830,
+        "resolution": [
+          30.0,
+          30.0
+        ],
+        "bands": 1,
+        "dtype": "uint8",
+        "nodata": 0.0,
+        "band_descriptions": [
+          null
+        ],
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "colormap": {
+          "0": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "1": [
+            0,
+            128,
+            128,
+            255
+          ],
+          "2": [
+            82,
+            204,
+            204,
+            255
+          ],
+          "3": [
+            255,
+            232,
+            32,
+            255
+          ],
+          "4": [
+            168,
+            0,
+            0,
+            255
+          ],
+          "5": [
+            57,
+            181,
+            74,
+            255
+          ],
+          "6": [
+            255,
+            255,
+            255,
+            255
+          ]
+        }
+      },
+      "source_stats": {
+        "value_counts": {
+          "0": 412427371,
+          "1": 285815,
+          "2": 1726491,
+          "3": 886581,
+          "4": 475224,
+          "5": 2043,
+          "6": 685
+        },
+        "pixels": 415804210,
+        "nodata_pixels": 412427371,
+        "valid_pixels": 3376839,
+        "valid_pct": 0.8121
+      },
+      "class_definitions": {
+        "0": "Background/No Data",
+        "1": "Unburned/Underburned to Low Burn Severity",
+        "2": "Low burn severity",
+        "3": "Moderate burn severity",
+        "4": "High Burn Severity",
+        "5": "Increased Greenness/Increased Vegetation Response",
+        "6": "Non-Processing Area Mask"
+      },
+      "source_metadata": {
+        "title": "Monitoring Trends in Burn Severity Thematic Burn Severity Mosaic for California in 2024",
+        "publication_date": "20260918",
+        "origin": [
+          "U.S. Geological Survey",
+          "USDA Forest Service"
+        ],
+        "doi": "https://doi.org/10.5066/P9NETC0T",
+        "time_period": "2024",
+        "class_method": "MTBS thematic burn severity classes are thresholded from continuous dNBR images or NBR images when pre-fire images are not available. Thresholds are based on interpretation by MTBS analysts."
+      },
+      "study_region_intersection": {
+        "intersects": true,
+        "source_window": [
+          0,
+          0,
+          6388,
+          5818
+        ],
+        "pixel_aligned_copy": true,
+        "nodata": 0
+      },
+      "transforms": [
+        {
+          "source": "MTBS severity 2024",
+          "src_crs": "EPSG:5070",
+          "dst_crs": "EPSG:5070",
+          "resampling": "nearest",
+          "src_res": 30.0,
+          "dst_res": 30.0,
+          "reprojected": false
+        }
+      ],
+      "status": "processed",
+      "message": "MTBS 2024 processed successfully",
+      "output_path": "data/processed/rasters/mtbs_severity/mtbs_severity_2024.tif",
+      "output_bounds": [
+        -2375775.0,
+        2186055.0,
+        -2112315.0,
+        2459865.0
+      ],
+      "output_shape": [
+        9127,
+        8782
+      ],
+      "output_nodata": 0,
+      "output_value_counts": {
+        "0": 78711995,
+        "1": 74830,
+        "2": 825542,
+        "3": 331341,
+        "4": 209037,
+        "5": 361,
+        "6": 208
+      },
+      "valid_pixel_count": 1441319,
+      "nodata_pixel_count": 78711995,
+      "class_area_km2_in_domain": {
+        "1": 67.347,
+        "2": 742.9878,
+        "3": 298.2069,
+        "4": 188.1333,
+        "5": 0.3249,
+        "6": 0.1872
+      }
+    },
+    {
+      "year": 2025,
+      "processing_version": "mtbs-severity-1.0",
+      "processed_utc": "2026-10-05T07:41:51.282932+00:00",
+      "data_class": "observed",
+      "output_crs": "EPSG:5070",
+      "output_resolution_m": 30.0,
+      "resampling": "nearest",
+      "study_region_wgs84": [
+        -124.5,
+        40.0,
+        -122.0,
+        42.0
+      ],
+      "source_file": "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_2025.zip",
+      "source_sha256": "3029f73311f5800496601e69a12eeedfcfc9586cdcb517735eea4216e6c8c567",
+      "source_size_bytes": 1278999,
+      "source": {
+        "members": [
+          "mtbs_CA_2025.tif",
+          "mtbs_CA_2025.xml"
+        ],
+        "raster_member": "mtbs_CA_2025.tif",
+        "metadata_member": "mtbs_CA_2025.xml",
+        "crs": "EPSG:5070",
+        "epsg": 5070,
+        "transform": [
+          30.0,
+          0.0,
+          -2188845.0,
+          0.0,
+          -30.0,
+          1848885.0
+        ],
+        "bounds": [
+          -2188845.0,
+          1367805.0,
+          -1896165.0,
+          1848885.0
+        ],
+        "bounds_wgs84": [
+          -121.14063,
+          32.90256,
+          -116.71406,
+          37.70158
+        ],
+        "width": 9756,
+        "height": 16036,
+        "resolution": [
+          30.0,
+          30.0
+        ],
+        "bands": 1,
+        "dtype": "uint8",
+        "nodata": 0.0,
+        "band_descriptions": [
+          null
+        ],
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "colormap": {
+          "0": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "1": [
+            0,
+            128,
+            128,
+            255
+          ],
+          "2": [
+            82,
+            204,
+            204,
+            255
+          ],
+          "3": [
+            255,
+            232,
+            32,
+            255
+          ],
+          "4": [
+            168,
+            0,
+            0,
+            255
+          ],
+          "5": [
+            57,
+            181,
+            74,
+            255
+          ],
+          "6": [
+            255,
+            255,
+            255,
+            255
+          ]
+        }
+      },
+      "source_stats": {
+        "value_counts": {
+          "0": 155490140,
+          "1": 55301,
+          "2": 381210,
+          "3": 392376,
+          "4": 124989,
+          "5": 1469,
+          "6": 1731
+        },
+        "pixels": 156447216,
+        "nodata_pixels": 155490140,
+        "valid_pixels": 957076,
+        "valid_pct": 0.6118
+      },
+      "class_definitions": {
+        "0": "Background/No Data",
+        "1": "Unburned/Underburned to Low Burn Severity",
+        "2": "Low burn severity",
+        "3": "Moderate burn severity",
+        "4": "High Burn Severity",
+        "5": "Increased Greenness/Increased Vegetation Response",
+        "6": "Non-Processing Area Mask"
+      },
+      "source_metadata": {
+        "title": "Monitoring Trends in Burn Severity Thematic Burn Severity Mosaic for California in 2025",
+        "publication_date": "20260918",
+        "origin": [
+          "U.S. Geological Survey",
+          "USDA Forest Service"
+        ],
+        "doi": "https://doi.org/10.5066/P9NETC0T",
+        "time_period": "2025",
+        "class_method": "MTBS thematic burn severity classes are thresholded from continuous dNBR images or NBR images when pre-fire images are not available. Thresholds are based on interpretation by MTBS analysts."
+      },
+      "study_region_intersection": {
+        "intersects": false
+      },
+      "transforms": [],
+      "status": "no_intersection",
+      "message": "MTBS 2025 does not intersect the WildfireTwin model domain"
+    }
+  ]
+}

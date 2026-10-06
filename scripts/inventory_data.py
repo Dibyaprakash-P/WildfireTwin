@@ -17,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import rasterio
 
-from geo import registry
+from geo import mtbs_severity, registry
 
 R = registry.REPO_ROOT
 
@@ -65,6 +65,32 @@ def firms_entry() -> list[dict]:
         out[0]["notes"] = (f"Region subset: {rep['region']['rows']:,} detections ({rep['region']['min'][:10]} – {rep['region']['max'][:10]}); "
                            f"global recent: {rep['recent_global']['rows']:,} ({rep['recent_global']['min'][:10]} – {rep['recent_global']['max'][:10]})")
     return out
+
+
+def mtbs_severity_entry(mosaics: list[Path]) -> dict:
+    """Status derived from the raw ZIPs, the preprocessing report and the GeoTIFFs actually on disk."""
+    status, detail = mtbs_severity.inventory_status()
+    rep = mtbs_severity.load_report() or {"years": []}
+    done = [r for r in rep["years"] if r["status"] == "processed"]
+    years = sorted({int(p.name.split("_")[-1][:4]) for p in mosaics})
+    crs = done[0]["source"]["crs"] if done else "see embedded metadata"
+    classes = done[0]["class_definitions"] if done else {}
+    msgs = "; ".join(r["message"] for r in rep["years"] if r["status"] != "processed")
+    return {
+        "source": "MTBS thematic burn-severity mosaics (California)", "type": "Burn severity raster (categorical classes)",
+        "status": status,
+        "date_range": f"{years[0]} – {years[-1]}" if years else "—", "spatial_resolution": "30 m",
+        "crs": f"{crs} (source)" + (f" → {done[0]['output_crs']} (processed)" if done else ""),
+        "purpose": "Observed post-fire severity context for historical replays (not a training target or input)",
+        "format": f"Zipped GeoTIFF + FGDC XML ({len(mosaics)} files, {size(mosaics)})",
+        "local_path": "datasets/bsp_*/mtbs_CA_<year>.zip",
+        "preprocessing": (f"Clipped to the study region, nearest-neighbour onto the LANDFIRE-aligned 30 m EPSG:5070 grid "
+                          f"(exact pixel copy); processed years {detail.get('processed_years')} → "
+                          f"{registry.sources()['mtbs']['processed_severity_dir']}/" if done else "not processed"),
+        "data_class": "observed",
+        "notes": (f"Classes (from XML): {', '.join(f'{k}={v}' for k, v in classes.items())}." if classes else "")
+                 + (f" {msgs}." if msgs else ""),
+    }
 
 
 def main() -> None:
@@ -124,12 +150,7 @@ def main() -> None:
         "local_path": rel(zp), "preprocessing": f"BBox-filtered {mrep['rows']} perimeters → GeoJSON (pure-Python shapefile reader)",
         "data_class": "observed",
     })
-    entries.append({
-        "source": "MTBS thematic burn-severity mosaics (California)", "type": "Burn severity raster", "status": "Available (not yet used)",
-        "date_range": "2020 – 2025", "spatial_resolution": "30 m", "crs": "see embedded metadata",
-        "purpose": "Potential severity validation", "format": f"Zipped GeoTIFF ({len(mosaics)} files, {size(mosaics)})",
-        "local_path": "datasets/bsp_*/mtbs_CA_<year>.zip", "preprocessing": "none", "data_class": "observed",
-    })
+    entries.append(mtbs_severity_entry(mosaics))
     entries.append({
         "source": "Open-Meteo Forecast API", "type": "Current + forecast weather (NWP)", "status": "Online (no key)",
         "date_range": "past 3 days + 4-day forecast", "spatial_resolution": "model-dependent (best match, ~1–11 km)", "crs": "EPSG:4326",

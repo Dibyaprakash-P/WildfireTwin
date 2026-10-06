@@ -1,0 +1,14 @@
+# Development override (loaded automatically by `docker compose up`).
+# Mounts the current Python source into the backend container, so code changes only need
+# `docker compose restart backend` instead of an image rebuild (the image's pip layer — PyTorch, GDAL — is slow
+# to rebuild). The dependencies still come from the image, so rebuild (`docker compose build backend`) only when
+# requirements.txt or backend/Dockerfile change. Delete this file for an immutable, image-only deployment.
+services:
+  backend:
+    volumes:
+      - ./backend:/app/backend:ro
+      - ./geo:/app/geo:ro
+      - ./ml:/app/ml:ro
+      - ./simulation:/app/simulation:ro
+      - ./config:/app/config:ro
+      - ./scripts:/app/scripts:ro

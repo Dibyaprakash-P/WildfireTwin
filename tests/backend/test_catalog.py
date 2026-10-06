@@ -17,7 +17,10 @@ def test_catalog_status_is_live_and_honest(client):
     assert far["group"] == "external" and far["used_in_training"] is False
     assert far["status"] in ("Not present", "Files present · not imported", "Imported")
     sev = next(e for e in cat["entries"] if e["source"].startswith("MTBS thematic"))
-    assert sev["used_in_training"] is False and "not yet used" in sev["status"]
+    # MTBS severity: never a training input; status must equal the state derived from the files on disk
+    from geo import mtbs_severity
+    assert sev["used_in_training"] is False and sev["group"] == "observed"
+    assert sev["status"] == mtbs_severity.inventory_status()[0]
     assert all(not e["used_in_training"] for e in cat["entries"] if e["source"].startswith("NASA FIRMS"))
     assert {s["status"] for s in cat["software"]} <= {"Installed", "Not detected"}
 

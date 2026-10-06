@@ -26,7 +26,7 @@ interface Catalog {
 const STATUS_OK = ["Available", "Generated", "Imported", "Installed"];
 
 function statusClass(s: string) {
-  if (STATUS_OK.includes(s)) return "text-ok";
+  if (STATUS_OK.includes(s) || s === "Available — processed") return "text-ok";
   if (s.startsWith("Online")) return "text-info";
   if (s.startsWith("Missing")) return "text-crit";
   return "text-warn";
@@ -311,10 +311,15 @@ export function SettingsPage() {
 interface HistFire { hist_id: string; name: string; ignition_date: string; acres: number; area_km2: number; program: string;
   latitude: number; longitude: number; in_model_domain: boolean; era5_available: boolean; replay_available: boolean }
 interface HistDetail extends HistFire { perimeter_geojson: object; firms_detections: number; firms_first: string | null;
-  firms_last: string | null; detections_by_day: Record<string, number>; validation_note: string }
+  firms_last: string | null; detections_by_day: Record<string, number>; validation_note: string;
+  mtbs_severity?: { year: number; available: boolean; note: string } }
+interface SeverityContext { available: boolean; reason?: string; year?: number; resampling?: string; mapped_fire_in_window?: boolean;
+  final_mapped_area_km2?: number; final_severity_area_km2?: Record<string, number>;
+  predicted_area_by_final_severity_km2?: Record<string, number>; predicted_outside_final_extent_frac?: number | null;
+  final_low_to_high_area_in_forecast_frac?: number | null }
 interface ReplayStep { horizon_min: number; label: string; status: string; reason?: string; bounds_wgs84?: [number, number, number, number];
   overlay_url?: string; observed_url?: string; footprint_url?: string; observed_detections?: number;
-  metrics_vs_observed?: Record<string, number>; weather?: Record<string, number> }
+  metrics_vs_observed?: Record<string, number>; weather?: Record<string, number>; mtbs_severity_context?: SeverityContext }
 interface Replay { replay_id: string; t0: string; model: { type: string; version: string }; initial_detections: number; steps: ReplayStep[] }
 
 export function HistoricalPage() {
@@ -393,6 +398,7 @@ export function HistoricalPage() {
                 <KV k="FIRMS dets." v={`${sel.firms_detections} (${utc(sel.firms_first)} → ${utc(sel.firms_last)})`} />
               </dl>
               <p className="text-2xs text-dim">{sel.validation_note}</p>
+              {sel.mtbs_severity && <p className="text-2xs text-dim">MTBS {sel.mtbs_severity.year} severity: {sel.mtbs_severity.available ? "processed" : "not available"} — {sel.mtbs_severity.note}</p>}
               {sel.replay_available ? (
                 <>
                   <label className="label" htmlFor="t0">t0 (UTC)</label>
@@ -426,7 +432,41 @@ export function HistoricalPage() {
             <p className="text-2xs text-dim mt-2">Single-case comparison with satellite-pixel footprints; not a statistical validation.</p>
           </Panel>
         )}
+        {replay && cur?.status === "ok" && cur.mtbs_severity_context && (
+          <Panel title="Post-fire severity context — MTBS" right={<DataClassTag c="observed" />}>
+            <SeverityContextView c={cur.mtbs_severity_context} />
+          </Panel>
+        )}
       </div>
     </div>
+  );
+}
+
+function pct(v: number | null | undefined) {
+  return v === null || v === undefined ? "—" : `${(v * 100).toFixed(1)} %`;
+}
+
+/** MTBS context: observed post-fire severity — explicitly not a spread metric (no timing in the product). */
+function SeverityContextView({ c }: { c: SeverityContext }) {
+  if (!c.available) return <p className="text-xs text-warn">{c.reason}</p>;
+  if (!c.mapped_fire_in_window) return <p className="text-xs text-dim">No MTBS {c.year} severity mapped for this fire inside the analysis window.</p>;
+  const rows = (o?: Record<string, number>) => Object.entries(o ?? {});
+  return (
+    <>
+      <dl className="m-0">
+        <KV k="MTBS year" v={`${c.year} · ${c.resampling} resampling`} />
+        <KV k="Final mapped area" v={`${num(c.final_mapped_area_km2, 2)} km² (in window)`} />
+        <KV k="Pred. beyond final extent" v={pct(c.predicted_outside_final_extent_frac)} />
+        <KV k="Final low–high area reached" v={pct(c.final_low_to_high_area_in_forecast_frac)} />
+      </dl>
+      <div className="label mt-2">Final severity in window (km²)</div>
+      <dl className="m-0">{rows(c.final_severity_area_km2).map(([k, v]) => <KV key={k} k={k} v={num(v, 2)} />)}</dl>
+      <div className="label mt-2">Predicted area (p ≥ 0.5) by final severity (km²)</div>
+      <dl className="m-0">{rows(c.predicted_area_by_final_severity_km2).map(([k, v]) => <KV key={k} k={k} v={num(v, 2)} />)}</dl>
+      <p className="text-2xs text-dim mt-2">
+        MTBS is a categorical post-fire severity map of the final extent (no timing). It is context, not a spread
+        metric: the FIRMS comparison above remains the validation. No mapping from burn probability to severity is made.
+      </p>
+    </>
   );
 }

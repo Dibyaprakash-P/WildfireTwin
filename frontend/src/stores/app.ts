@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import type { WindPerformance, WindRenderSettings } from "../components/globe/wind/windParticles";
 import type { ActiveFiresResponse, Alert, LogEntry, Prediction } from "../types/api";
 
 export interface Overlay {
@@ -19,11 +20,20 @@ export interface Layers {
   front: boolean;
   footprint: boolean;
   borders: boolean;
-  wind: boolean;
+  wind: boolean;       // single Open-Meteo observation at the selected fire
+  windFlow: boolean;   // global wind-flow particles (NOAA GFS 10 m field)
 }
 
 /** What the globe is currently showing on the forecast timeline (set by the animation engine at phase changes only). */
 export type AnimPhase = { kind: "frame"; index: number } | { kind: "blend"; from: number; to: number };
+
+/** Status of the global wind field used by the wind-flow layer (never substituted by synthetic data). */
+export type WindFieldStatus =
+  | { state: "idle" | "loading" }
+  | { state: "ok"; source: string; cycle: string; maxSpeed: number }
+  | { state: "unavailable"; message: string };
+
+export type { WindPerformance, WindRenderSettings };
 
 export interface WindObs { lat: number; lon: number; speed: number; fromDeg: number; time: string; source: string }
 
@@ -59,6 +69,10 @@ interface AppState {
 
   wind: WindObs | null;
   setWind: (w: WindObs | null) => void;
+  windSettings: WindRenderSettings;
+  setWindSettings: (p: Partial<WindRenderSettings>) => void;
+  windStatus: WindFieldStatus;
+  setWindStatus: (s: WindFieldStatus) => void;
 
   cursor: { lat: number; lon: number } | null;
   setCursor: (c: { lat: number; lon: number } | null) => void;
@@ -105,11 +119,15 @@ export const useApp = create<AppState>((set) => ({
   setExtraOverlays: (extraOverlays) => set({ extraOverlays }),
 
   layers: { fires: true, imagery: "satellite", terrain: true, relief: true, nightLights: true, prediction: true, front: true,
-    footprint: true, borders: true, wind: true },
+    footprint: true, borders: true, wind: true, windFlow: true },
   setLayer: (k, v) => set((s) => ({ layers: { ...s.layers, [k]: v } })),
 
   wind: null,
   setWind: (wind) => set({ wind }),
+  windSettings: { opacity: 0.55, density: 1, speed: 1, performance: "auto" },
+  setWindSettings: (p) => set((s) => ({ windSettings: { ...s.windSettings, ...p } })),
+  windStatus: { state: "idle" },
+  setWindStatus: (windStatus) => set({ windStatus }),
 
   cursor: null,
   setCursor: (cursor) => set({ cursor }),

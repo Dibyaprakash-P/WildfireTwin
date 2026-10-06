@@ -13,6 +13,7 @@ import { flyToPoint, FIRE_CLOSE_RANGE_M, useCesiumCamera } from "./useCesiumCame
 import { useFireVisualization } from "./useFireVisualization";
 import { useOverlayLayers } from "./useOverlayLayers";
 import { usePredictionAnimation } from "./usePredictionAnimation";
+import { useWindFlow } from "./useWindFlow";
 import { useWindLayer } from "./useWindLayer";
 import { createViewer } from "./viewerSetup";
 
@@ -29,7 +30,8 @@ const DOMAIN = Cesium.Color.fromCssColorString("#4cc3d9");
 /**
  * Orchestrates the Cesium globe. Responsibilities are split into managers/hooks:
  * viewerSetup (scene/lighting/atmosphere) · imagery · terrain · useCesiumCamera · useFireVisualization ·
- * usePredictionAnimation · useWindLayer · useOverlayLayers · MapControls. See docs/globe_visualization.md.
+ * usePredictionAnimation · useWindLayer (wind at the fire) · useWindFlow (global GFS wind particles) ·
+ * useOverlayLayers · MapControls. See docs/globe_visualization.md.
  */
 export default function GlobeViewer({ overlays = [], geojson = null, prediction = null, showDomain = true, className = "" }: GlobeViewerProps) {
   const host = useRef<HTMLDivElement>(null);
@@ -138,6 +140,7 @@ export default function GlobeViewer({ overlays = [], geojson = null, prediction 
   useFireVisualization(viewer, ticker, fires, layers.fires, selected);
   usePredictionAnimation(viewer, ticker, prediction, layers, opacity);
   useWindLayer(viewer, ticker, wind, layers.wind);
+  useWindFlow(viewer, layers.windFlow);
   useOverlayLayers(viewer, overlays, geojson, layers, opacity);
 
   // ---------------------------------------------------------------- model domain outline

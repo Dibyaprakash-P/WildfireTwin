@@ -41,4 +41,7 @@ worldcover:
 mtbs:
   perimeters_zip: "datasets/bsp_zmysxvwg6simrvuefqrx/burn_severity_perimeter_data.zip"
   severity_mosaic_zips: "datasets/bsp_zmysxvwg6simrvuefqrx/mtbs_CA_*.zip"
+  severity_years: [2020, 2021, 2022, 2023, 2024, 2025]   # expected mosaics; missing ones are reported, not fatal
+  processed_severity_dir: "data/processed/rasters/mtbs_severity"      # mtbs_severity_<year>.tif (EPSG:5070, 30 m)
+  severity_report: "data/metadata/mtbs_severity_preprocess_report.json"
   processed_perimeters: "data/processed/vectors/mtbs_perimeters_region.geojson"

@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-10-01T17:16:40.319836+00:00",
+  "generated_utc": "2026-10-05T07:41:54.667925+00:00",
   "entries": [
     {
       "source": "NASA FIRMS VIIRS NOAA-20 (J1V-C2)",
@@ -125,16 +125,17 @@
     },
     {
       "source": "MTBS thematic burn-severity mosaics (California)",
-      "type": "Burn severity raster",
-      "status": "Available (not yet used)",
+      "type": "Burn severity raster (categorical classes)",
+      "status": "Available \u2014 processed",
       "date_range": "2020 \u2013 2025",
       "spatial_resolution": "30 m",
-      "crs": "see embedded metadata",
-      "purpose": "Potential severity validation",
-      "format": "Zipped GeoTIFF (6 files, 31.5 MB)",
+      "crs": "EPSG:5070 (source) \u2192 EPSG:5070 (processed)",
+      "purpose": "Observed post-fire severity context for historical replays (not a training target or input)",
+      "format": "Zipped GeoTIFF + FGDC XML (6 files, 31.5 MB)",
       "local_path": "datasets/bsp_*/mtbs_CA_<year>.zip",
-      "preprocessing": "none",
-      "data_class": "observed"
+      "preprocessing": "Clipped to the study region, nearest-neighbour onto the LANDFIRE-aligned 30 m EPSG:5070 grid (exact pixel copy); processed years [2020, 2021, 2022, 2023, 2024] \u2192 data/processed/rasters/mtbs_severity/",
+      "data_class": "observed",
+      "notes": "Classes (from XML): 0=Background/No Data, 1=Unburned/Underburned to Low Burn Severity, 2=Low burn severity, 3=Moderate burn severity, 4=High Burn Severity, 5=Increased Greenness/Increased Vegetation Response, 6=Non-Processing Area Mask. MTBS 2025 does not intersect the WildfireTwin model domain."
     },
     {
       "source": "Open-Meteo Forecast API",

@@ -107,4 +107,78 @@ Every scenario/sample row carries `simulation_source = WTRS`, `reference_engine 
 
 Used to list historical fires that can be replayed and to display their final perimeter as **context**. Replay
 metrics are computed against the observed cumulative FIRMS footprint at t0 + h, not against these perimeters
-(a final perimeter has no timing). Burn-severity mosaics are not used.
+(a final perimeter has no timing). The perimeter table also carries each fire's own MTBS dNBR class thresholds
+(`low_t`, `mod_t`, `high_t`, `incgreen_t`, `nodata_t`, `dnbr_offst`), reported with the severity context below.
+
+## MTBS thematic burn-severity mosaics (observed post-fire context)
+
+**Data class: observed. MTBS severity is NOT used as the WTRS training target, NOT a model input channel, and NOT a
+spread metric.** WTRS (Rothermel + MTT) remains the only training reference.
+
+```
+datasets/bsp_*/mtbs_CA_<year>.zip   (raw, never modified)
+   ↓  metadata inspection (FGDC XML: class definitions, citation; raster: CRS, transform, dtype, nodata, colour table)
+   ↓  extraction of the .tif to a temporary directory (deleted afterwards)
+   ↓  validation (CRS present, 1 band, uint8, every value defined in the XML)
+   ↓  clip to the study region (config study_region.bbox_wgs84 → EPSG:5070, snapped to the LANDFIRE 30 m lattice)
+   ↓  reproject to EPSG:5070 / align to the analysis-grid convention — NEAREST (categorical)
+   ↓  data/processed/rasters/mtbs_severity/mtbs_severity_<year>.tif  + data/metadata/mtbs_severity_preprocess_report.json
+   ↓  historical replay: severity context per analysis window (nearest at 30 m, MODE at 60/120 m)
+```
+
+Run: `python -m scripts.preprocess_mtbs_severity` (then `python -m scripts.inventory_data`).
+Code: `geo/mtbs_severity.py`, `ml/evaluation/severity_context.py`, `backend/app/services/historical.py`.
+
+**What the files are (inspected 2026-10-05).** Each ZIP holds `mtbs_CA_<year>.tif` + `mtbs_CA_<year>.xml`
+(FGDC, USGS/USDA FS, doi:10.5066/P9NETC0T). Raster: 1 band, uint8, EPSG:5070, 30 m, nodata 0, colour table,
+no band description, no QA band. Classes are read from the XML (`eainfo/attr/attrdomv/edom`) — not hard-coded:
+
+| Value | Producer definition |
+|---|---|
+| 0 | Background/No Data |
+| 1 | Unburned/Underburned to Low Burn Severity |
+| 2 | Low burn severity |
+| 3 | Moderate burn severity |
+| 4 | High Burn Severity |
+| 5 | Increased Greenness/Increased Vegetation Response |
+| 6 | Non-Processing Area Mask |
+
+Per the XML, classes are *thresholded from continuous dNBR (or NBR when no pre-fire image exists) by MTBS analysts*
+per fire, so the product is **categorical thematic severity** — not dNBR/RdNBR, with no global thresholds in the mosaic
+metadata (the per-fire thresholds are in the perimeter table). Class 6 is the only mask.
+
+| Year | Extent (WGS84 lat) | Intersects model domain | Result |
+|---|---|---|---|
+| 2020–2024 | ~31.6–43.4 °N | yes | processed (8,782 × 9,127 px at 30 m) |
+| 2025 | 32.9–37.7 °N | **no** | reported "MTBS 2025 does not intersect the WildfireTwin model domain" |
+
+**Resampling.** The mosaics already lie on the LANDFIRE 30 m lattice in EPSG:5070, so the clip with nearest-neighbour
+is an exact pixel copy (verified against the source window for every year). For the coarser 60 / 120 m replay windows
+the categorical classes are aggregated with MODE. Bilinear/average resampling is never used and classes are never
+converted to continuous values.
+
+**Report** (`mtbs_severity_preprocess_report.json`, one record per year): status + message (`processed`, `missing`,
+`failed`, `no_intersection`), source file, SHA-256, size, ZIP members, source CRS/transform/bounds/size/resolution/
+bands/dtype/nodata/colour table, full-raster value counts and valid %, class definitions and XML citation, output path,
+CRS, resolution, bounds, shape, nodata, value counts, valid/nodata pixel counts, class areas in the domain, transform
+log, resampling, processing version (`mtbs-severity-1.0`) and timestamp. A missing or failing year never stops the others.
+
+**Inventory status** (`scripts/inventory_data.py`, `/api/data/catalog`) is derived from the files on disk:
+`Available — raw only` (ZIPs but no successful output), `Available — processed` (report says processed *and* the
+GeoTIFF exists), `Available — preprocessing failed`, `Missing`.
+
+**Use in historical replay (context, not validation of spread).** MTBS is a post-fire map of the final extent with
+no timing, so it cannot score the spread at a horizon; IoU / Dice / growth IoU / Hausdorff stay computed against the
+observed FIRMS footprint. For each replay step, restricted to the fire's own perimeter (other fires of the same
+yearly mosaic are excluded), the replay reports:
+
+* final mapped severity area by producer class (km²);
+* severity composition of the predicted area (p ≥ 0.5) by final class (km²);
+* share of the predicted area **outside the final mapped extent** (class-6 pixels excluded) — a valid over-prediction
+  check, since a fire cannot be beyond its final extent at any time;
+* share of the final low/moderate/high-severity area already inside the forecast extent (descriptive; values < 1 are
+  expected because MTBS is the end state);
+* the fire's published dNBR thresholds.
+
+No mapping from burn probability to severity class and no confusion matrix are computed — there is no defensible
+correspondence between the two. The MTBS year is the ignition year of the replayed fire.

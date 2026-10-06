@@ -44,15 +44,29 @@ ROLES: list[tuple[str, dict]] = [
     ("MTBS / burned-area", {"group": "observed", "used_in_training": False, "roles": [
         "historical fire catalogue (which fires can be replayed)", "final-perimeter display for context"],
         "note": "Replay metrics are computed against the observed FIRMS footprint, not against these perimeters."}),
-    ("MTBS thematic", {"group": "observed", "used_in_training": False, "roles": [], "unused": True}),
+    ("MTBS thematic", {"group": "observed", "used_in_training": False, "roles": [
+        "historical replay context: post-fire severity of the predicted area and share predicted beyond the final mapped extent"],
+        "note": "Categorical post-fire product without timing; not a spread metric, training target or model input."}),
     ("Open-Meteo", {"group": "observed", "used_in_training": False, "roles": [
         "current/forecast weather for live inference, environment panel, monitoring and alerts"],
         "note": "NWP forecast/analysis data; not used in training."}),
+    ("NOAA GFS", {"group": "observed", "used_in_training": False, "roles": [
+        "globe wind-flow layer: animated particles following the global 10 m U/V field (visualisation only)"],
+        "note": "Model analysis (GFS f000), not an observation; not an input of the spread models."}),
     ("WTRS reference", {"group": "simulated", "used_in_training": True, "roles": [
         "training / validation / test targets and fire states for U-Net, FNO, PI-FNO"]}),
     ("FARSITE / FlamMap", {"group": "external", "used_in_training": False, "roles": [
         "optional external reference / benchmark (import pipeline)"]}),
 ]
+
+GFS_WIND_ENTRY = {
+    "source": "NOAA GFS 10 m wind (global analysis)", "type": "Gridded U/V wind, GFS analysis f000 (NWP)",
+    "status": "Online (no key)", "date_range": "latest 6-hourly cycle", "spatial_resolution": "1.0° (360 × 181)",
+    "crs": "EPSG:4326", "purpose": "Wind-flow visualisation on the globe", "format": "GRIB2 via NOMADS filter",
+    "local_path": "data/processed/weather/wind/ (last cycle cache)",
+    "preprocessing": "Decoded with eccodes; served as int16 (0.01 m/s) by /api/wind/field; refreshed ≤ every 30 min",
+    "data_class": "observed",
+}
 
 FLAMMAP_CANDIDATES = [r"C:\Workspace\FlamMap6", r"C:\Program Files\FlamMap6", r"C:\Program Files (x86)\FlamMap6",
                       r"C:\FlamMap6"]
@@ -106,10 +120,18 @@ def _live_status(source: str, entry: dict, imported: list[dict]) -> tuple[str, d
         ok = registry.path(src["mtbs"]["perimeters_zip"]).exists()
         return ("Available" if ok else "Missing"), {}
     if source.startswith("MTBS thematic"):
-        return ("Available · not yet used" if _exists(src["mtbs"]["severity_mosaic_zips"]) else "Missing"), {}
+        from geo import mtbs_severity
+        status, detail = mtbs_severity.inventory_status()
+        return status, detail
     if source.startswith("Open-Meteo"):
         from backend.app.services.weather import weather_service
         return ("Online (recent successful request)" if weather_service._cache else "Online service · not yet queried"), {}
+    if source.startswith("NOAA GFS"):
+        from backend.app.services.wind_field import wind_field_service
+        f = wind_field_service._field
+        if f is None:
+            return "Online service · not yet queried", {}
+        return "Online (cached field)", {"cycle": f.cycle.isoformat().replace("+00:00", "Z"), "grid": f"{f.nx}×{f.ny}"}
     if source.startswith("WTRS reference"):
         d = registry.path("data/processed/training/wtrs-ncal-v1")
         if not (d / "manifest.json").exists():
@@ -140,7 +162,7 @@ async def live_catalog() -> dict:
     base = json.loads(registry.path("data/metadata/catalog.json").read_text())
     imported = await imported_simulations()
     entries = []
-    for e in base["entries"]:
+    for e in base["entries"] + [GFS_WIND_ENTRY]:
         role = _role(e["source"])
         status, extra = _live_status(e["source"], e, imported)
         e = dict(e)

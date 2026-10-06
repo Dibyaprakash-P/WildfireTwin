@@ -5,6 +5,9 @@ Data classes used here:
   predicted  WildfireTwin forecast from the observed state at t0 with ERA5 weather
   validated  comparison of the prediction with the OBSERVED cumulative FIRMS
              footprint at t0 + h (satellite-pixel footprints; coarse, overpass-limited)
+  context    MTBS post-fire burn severity (observed, categorical, no timing) inside the fire's final perimeter:
+             severity composition of the predicted area and over-prediction beyond the final mapped extent.
+             Never used as a spread metric (see ml/evaluation/severity_context.py).
 
 A replay is only offered when it is defensible: the fire lies inside the local
 landscape domain and ERA5 covers t0 - 72 h ... t0 + horizon.
@@ -26,12 +29,14 @@ from backend.app.config import get_settings
 from backend.app.ml.registry import model_registry
 from backend.app.services.firms import in_study_region
 from geo import registry
+from geo import mtbs_severity
 from geo.footprint import rasterize_detections
 from geo.landscape import LandscapeUnavailable, build_landscape
 from geo.overlay import front_png, mask_png, probability_png, write_geotiff
 from geo.rasters import AnalysisGrid
 from geo.weather import wind_speed_dir
 from ml.evaluation.metrics import mask_metrics
+from ml.evaluation.severity_context import severity_context
 from ml.features import BAND_CELL_M, BAND_OF_HORIZON, HORIZON_LABELS, WeatherState, build_input
 from simulation.weather_sources import era5_series, era5_store
 
@@ -121,7 +126,30 @@ def fire_detail(hist_id: str) -> dict | None:
         "validation_note": "Replay validation compares predictions with the observed cumulative FIRMS footprint "
                            "(375 m / 1 km pixels, limited by satellite overpasses). The burned-area perimeter is the "
                            "final extent, shown for context only.",
+        "mtbs_severity": _severity_availability(int(pd.Timestamp(r["ig"]).year)),
     }
+
+
+def _severity_availability(year: int) -> dict:
+    p = mtbs_severity.output_path(year)
+    return {"year": year, "available": p.exists(), "data_class": "observed",
+            "note": ("MTBS thematic burn severity (post-fire, categorical) is shown as context for the replay: severity "
+                     "of the predicted area and share predicted beyond the final mapped extent. It is not a time-resolved "
+                     "spread observation and is not used for the spread metrics.") if p.exists()
+            else f"MTBS {year} severity not processed or not available for the model domain."}
+
+
+def _fire_thresholds(row: pd.Series) -> dict | None:
+    """The fire's own MTBS dNBR class thresholds from the perimeter attribute table (provenance; values as published)."""
+    keys = ("dnbr_offst", "nodata_t", "incgreen_t", "low_t", "mod_t", "high_t")
+    vals = {k: float(row[k]) for k in keys if k in row and pd.notna(row[k]) and str(row[k]).strip() not in ("", "-9999")}
+    return vals or None
+
+
+def _perimeter_mask(geom, grid: AnalysisGrid) -> np.ndarray:
+    from rasterio.features import rasterize
+    g5070 = gpd.GeoSeries([geom], crs="EPSG:4326").to_crs(grid.crs).iloc[0]
+    return rasterize([(g5070, 1)], out_shape=grid.shape, transform=grid.transform, fill=0, dtype="uint8").astype(bool)
 
 
 def _weather_state(ws, hz_min: int) -> WeatherState:
@@ -160,6 +188,8 @@ def replay(hist_id: str, t0_iso: str, model_type: str | None) -> dict:
     out_dir = get_settings().predictions_dir / rid
     steps = []
     lands: dict[str, object] = {}
+    sev_year = int(pd.Timestamp(r["ig"]).year)
+    sev_cache: dict[str, tuple | None] = {}
     for hz in REPLAY_HORIZONS:
         band = BAND_OF_HORIZON[hz]
         label = HORIZON_LABELS[hz]
@@ -186,6 +216,14 @@ def replay(hist_id: str, t0_iso: str, model_type: str | None) -> dict:
         mask_png(out_dir / f"{label}_observed.png", m1, land.grid, (120, 220, 140))
         mask_png(out_dir / f"footprint_{band}.png", m0, land.grid, (90, 200, 255))
         met = mask_metrics(prob, m1 > 0.5, m0 > 0.5, land.grid.cell)
+        if band not in sev_cache:
+            sw = mtbs_severity.severity_window(sev_year, land.grid)
+            sev_cache[band] = None if sw is None else (sw[0], sw[1], _perimeter_mask(r.geometry, land.grid))
+        sc = sev_cache[band]
+        mtbs_ctx = ({"available": False, "reason": f"MTBS {sev_year} severity not processed / not available"} if sc is None else
+                    {"available": True, "year": sev_year, "resampling": sc[1]["resampling"], "data_class": "observed",
+                     "fire_dnbr_thresholds": _fire_thresholds(r),
+                     **severity_context(sc[0], sc[1]["classes"], sc[1]["nodata"], prob >= 0.5, land.grid.cell, sc[2])})
         spd, wdir = wind_speed_dir(w.u_mean_ms, w.v_mean_ms)
         steps.append({"horizon_min": hz, "label": label, "status": "ok", "band": band, "cell_m": land.grid.cell,
                       "bounds_wgs84": list(b), "overlay_url": f"/files/predictions/{rid}/{label}_prob.png",
@@ -193,8 +231,10 @@ def replay(hist_id: str, t0_iso: str, model_type: str | None) -> dict:
                       "front_url": f"/files/predictions/{rid}/{label}_front.png",
                       "footprint_url": f"/files/predictions/{rid}/footprint_{band}.png",
                       "observed_detections": int(len(obs_det)), "metrics_vs_observed": met,
+                      "mtbs_severity_context": mtbs_ctx,
                       "weather": {"temperature_mean_c": w.temp_mean_c, "rh_mean_pct": w.rh_mean_pct,
                                   "wind_mean_ms": float(spd), "wind_from_deg": float(wdir), "precip_sum_mm": w.precip_sum_mm}})
     return {"replay_id": rid, "hist_id": hist_id, "t0": t0.isoformat(), "model": {"type": lm.model_type, "version": lm.version},
             "initial_detections": int(len(init_det)), "weather_source": ws.source, "steps": steps,
-            "data_classes": {"initial": "observed", "prediction": "predicted", "comparison": "validated (vs observed FIRMS footprint)"}}
+            "data_classes": {"initial": "observed", "prediction": "predicted", "comparison": "validated (vs observed FIRMS footprint)",
+                             "severity_context": "observed (MTBS post-fire severity; context, not a spread metric)"}}

@@ -1,6 +1,6 @@
 # Data Inventory
 
-_Generated 2026-10-01T17:16:40Z by `python -m scripts.inventory_data` from file metadata._
+_Generated 2026-10-05T07:41:54Z by `python -m scripts.inventory_data` from file metadata._
 
 Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied). Processed products live in `data/processed/`.
 
@@ -148,16 +148,17 @@ Raw files remain in `datasets/` exactly as downloaded (nothing moved or copied).
 
 | field | value |
 |---|---|
-| type | Burn severity raster |
-| status | Available (not yet used) |
+| type | Burn severity raster (categorical classes) |
+| status | Available — processed |
 | date range | 2020 – 2025 |
 | spatial resolution | 30 m |
-| crs | see embedded metadata |
-| format | Zipped GeoTIFF (6 files, 31.5 MB) |
+| crs | EPSG:5070 (source) → EPSG:5070 (processed) |
+| format | Zipped GeoTIFF + FGDC XML (6 files, 31.5 MB) |
 | local path | datasets/bsp_*/mtbs_CA_<year>.zip |
-| purpose | Potential severity validation |
-| preprocessing | none |
+| purpose | Observed post-fire severity context for historical replays (not a training target or input) |
+| preprocessing | Clipped to the study region, nearest-neighbour onto the LANDFIRE-aligned 30 m EPSG:5070 grid (exact pixel copy); processed years [2020, 2021, 2022, 2023, 2024] → data/processed/rasters/mtbs_severity/ |
 | data class | observed |
+| notes | Classes (from XML): 0=Background/No Data, 1=Unburned/Underburned to Low Burn Severity, 2=Low burn severity, 3=Moderate burn severity, 4=High Burn Severity, 5=Increased Greenness/Increased Vegetation Response, 6=Non-Processing Area Mask. MTBS 2025 does not intersect the WildfireTwin model domain. |
 
 ## Open-Meteo Forecast API
 

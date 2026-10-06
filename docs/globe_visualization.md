@@ -13,6 +13,9 @@ The 3D globe is a CesiumJS viewer (true WGS84 globe, not a 2D map). All code is 
 | `useFireVisualization.ts` | FIRMS markers: cores, clustering, halos + pulse, selected-fire highlight |
 | `usePredictionAnimation.ts` | forecast frames, playback engine, fire front, analysis window, observed footprint |
 | `useWindLayer.ts` | Open-Meteo wind vector at the selected fire |
+| `useWindFlow.ts` | global wind-flow layer: loads the wind field, drives the particle renderer, refresh + cleanup |
+| `wind/windField.ts` | `WindGrid` / `WindFieldProvider` interface, NOAA GFS provider, bilinear `sampleWind` |
+| `wind/windParticles.ts` | WebGL particle renderer (shaders, trails, adaptive performance) |
 | `useOverlayLayers.ts` | static overlays for Simulation / Historical pages, GeoJSON perimeters |
 | `MapControls.tsx` | + / − / global view / focus fire, altitude readout |
 | `ticker.ts` | single shared `requestAnimationFrame` loop for all animations |
@@ -108,11 +111,74 @@ The 3D globe is a CesiumJS viewer (true WGS84 globe, not a 2D map). All code is 
 * Changing the overlay style bumps `OVERLAY_STYLE_VERSION`, which is part of the prediction input hash, so new
   requests regenerate overlays instead of returning cached old-style images.
 
-## Wind (observed)
+## Wind at the fire (Open-Meteo)
 
 The selected fire's current Open-Meteo 10 m wind: a downwind arrow (300 m per m/s, ≥ 400 m) with a label, and three
 faint markers drifting along it at a rate proportional to the observed speed. A single real observation — no wind
-field is interpolated.
+field is interpolated from it.
+
+## Global wind flow (NOAA GFS particles)
+
+Layer **Atmosphere → Wind flow** (on by default). Animated particles follow the real global 10 m wind field.
+
+**Why CesiumJS and not Mapbox GL JS.** The upgrade brief preferred Mapbox but allowed keeping the existing engine if
+a migration would break things. The globe already provides satellite imagery, terrain (SRTM / Cesium World Terrain),
+atmosphere and sun lighting, GPU-clustered FIRMS points, and prediction frames draped *on terrain* with a real-frame
+timeline. Migrating would mean rewriting all of that (terrain-draped single-tile rasters, the SRTM heightmap provider,
+picking) and would add a mandatory token (`VITE_MAPBOX_ACCESS_TOKEN`). The wind layer is therefore a custom WebGL
+layer on the existing Cesium globe: one globe engine, no new dependency, no token required.
+
+**Data source** (`backend/app/services/wind_field.py`, `GET /api/wind/field`)
+
+| Item | Value |
+|---|---|
+| Product | NOAA GFS global analysis (forecast hour 000), UGRD / VGRD at 10 m above ground |
+| Grid | 1.0° × 1.0°, 360 × 181, lon 0…359 °E, lat 90…−90 |
+| Access | NOMADS GRIB filter (public, no key); GRIB2 template 5.3 decoded with eccodes |
+| Freshness | cycles 00/06/12/18 UTC, published ~3.5–5 h later; newest cycle looked for at most every 30 min; last good GRIB cached in `data/processed/weather/wind/` |
+| Transport | JSON: grid metadata + base64 little-endian int16 (0.01 m/s steps) for U and V (~0.35 MB, gzip) |
+| Data class | model analysis — not an observation, not a WildfireTwin prediction, **not an input of the spread models** |
+| Failure | no cycle downloadable/decodable → HTTP 503 `Wind data unavailable`; the UI shows that text and draws nothing |
+
+ERA5 is available locally only for N. California 2024–2025 and Open-Meteo gives point values, so neither is used as a
+global current field. Another source can be added by implementing `WindFieldProvider.getWindField()`.
+
+**Renderer** (`wind/windParticles.ts`)
+
+* Separate transparent WebGL canvas over the Cesium canvas (`pointer-events: none`, so picking is unaffected) with its
+  own `requestAnimationFrame` loop; Cesium keeps `requestRenderMode`. The overlay reads the live camera matrices every
+  frame, so it follows rotation, zoom and fly-to exactly.
+* Particle state lives in typed arrays (lon, lat, age, lifetime, previous ECEF). A fixed 30 Hz simulation tick advects
+  each particle with the bilinearly interpolated U/V (`sampleWind`, wraps in longitude). Particles respawn uniformly
+  over the visible part of the globe (view rectangle, far side rejected) when they age out (~1.7–4.7 s) or leave the
+  view. There is no random motion: direction and relative speed always come from the field.
+* Trails: each tick writes one segment (previous → new position) per particle into a ring of 9–14 slots (slot-major
+  buffer, one `bufferSubData` per tick, no buffer re-creation). Vertices carry their birth tick; the vertex shader
+  fades segments by age, plus a per-particle fade-in/out.
+* Precision: ECEF positions are split into high/low floats and rendered relative to the camera (as Cesium does), so
+  trails stay stable at fire-scale zoom; a horizon test in the vertex shader hides the far side of the globe.
+* Colour = speed: grey-blue (calm) → cyan (~8 m/s) → pale yellow (~14 m/s) → orange (≥ 20 m/s). Default opacity 55 %
+  so observed fires and the AI prediction stay dominant. Legend: *Wind flow (atmospheric flow, not fire spread)*.
+* On-screen speed: flow time is accelerated in proportion to camera height (with up to 4× extra below ~2,000 km so
+  calm local winds stay readable). This is a display setting; it never changes the field.
+
+**Controls** (layer panel → Atmosphere): Wind flow on/off (off destroys the renderer: loop stopped, GL context and
+buffers released), opacity, particle density (0.25–1.5×), animation speed (0.25–3×), performance Auto / High /
+Medium / Low.
+
+| Tier | Particles | Trail slots (× 1/30 s) |
+|---|---|---|
+| High | 18,000 | 14 |
+| Medium | 10,000 | 12 |
+| Low | 4,000 | 9 |
+
+*Auto* picks a tier from screen size and CPU cores (phones / < 768 px → Low) and, while running, cuts density in 25 %
+steps after ~2 s below ~35 fps (recovering slowly when there is headroom). The density slider multiplies the tier
+budget (minimum 1,500 particles).
+
+**Not done:** the wind field does not alter the AI prediction (the model output stays authoritative); there is no
+forecast-hour animation of the wind field (analysis only); particles are drawn at the ellipsoid surface (no terrain
+height), which does not matter at the 1° field scale.
 
 ## Visual distinction of data classes
 
@@ -132,6 +198,8 @@ field is interpolated.
 * Pulse touches ≤ 1,200 primitives; marker collections are rebuilt only on data or cluster-level change; halos only
   on camera move-end.
 * Forecast frames are preloaded once per prediction; playback changes layer alpha only.
+* Wind flow: GPU line rendering from typed arrays (no DOM/React object per particle), one buffer upload per 30 Hz
+  tick, field fetched at most every 30 min (never per frame), loop paused when the tab is hidden, adaptive count.
 * Measured (Playwright, Chromium on the dev laptop's Intel integrated GPU via D3D11, 1600×950): main thread
   60 fps in all states; Cesium renders 30/s with the marker pulse, ~57/s during playback; JS heap 188 MB.
   Software rendering (SwiftShader, headless default) is far slower and not representative.
@@ -142,9 +210,15 @@ field is interpolated.
 * Terrain endpoint unavailable → ellipsoid; hillshade tiles outside coverage return 204 and are skipped.
 * Imagery service unavailable → the other basemap options remain selectable.
 * No prediction / unavailable horizon → no layer is created; the banner and summary panel say so.
+* Wind field unavailable → "Wind data unavailable" in the layer panel and no particles; no WebGL context for the
+  wind canvas → "Wind layer could not start" and the globe keeps working.
 
 ## Testing
 
+* `frontend/src/test/wind.test.ts` — int16 decoding (size mismatch rejected), bilinear sampling and longitude wrap,
+  advection direction/magnitude, polar retirement, antimeridian ranges, ECEF, high/low split, performance tiers,
+  display time scale. `tests/backend/test_wind_field.py` — GFS cycle selection, NOMADS request, payload round trip,
+  "unavailable" when nothing downloads (no synthetic field), eccodes decoding.
 * `frontend/src/test/globe.test.ts` — frame availability (unavailable/missing horizons never become frames), relief
   fade, clustering totals.
 * `tests/geo/test_overlays.py` — fire front is the outer boundary only, probability PNG transparency, hillshade tiles

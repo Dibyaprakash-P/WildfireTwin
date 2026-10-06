@@ -11,6 +11,7 @@ from fastapi import APIRouter, Query
 from backend.app.services.environment import local_environment
 from backend.app.services.firms import event_to_dict, firms_service
 from backend.app.services.weather import WeatherUnavailable, forecast_summary, weather_service
+from backend.app.services.wind_field import WindFieldUnavailable, wind_field_service
 from backend.app.utils.errors import APIError
 
 router = APIRouter(tags=["weather"])
@@ -34,6 +35,23 @@ async def current(lat: float = Query(..., ge=-90, le=90), lon: float = Query(...
 async def forecast(lat: float = Query(..., ge=-90, le=90), lon: float = Query(..., ge=-180, le=180)):
     wx = await _wx(lat, lon)
     return wx | {"summary": forecast_summary(wx)}
+
+
+_wind_payload: tuple[str, dict] | None = None
+
+
+@router.get("/wind/field")
+async def wind_field():
+    """Global 10 m wind vector grid (NOAA GFS 1° analysis) for the globe's wind-flow layer. 503 if unavailable."""
+    global _wind_payload
+    try:
+        field = await wind_field_service.get()
+    except WindFieldUnavailable as e:
+        raise APIError(503, "wind_unavailable", f"Wind data unavailable: {e}")
+    key = field.cycle.isoformat()
+    if _wind_payload is None or _wind_payload[0] != key:
+        _wind_payload = (key, field.to_payload())
+    return _wind_payload[1]
 
 
 @router.get("/environment/{fire_id}")

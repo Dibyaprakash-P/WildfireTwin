@@ -118,6 +118,11 @@ forecast, ERA5 historical or constant weather; 1–72 h; 30/60/120 m. External F
 ## Running the application
 * **Dashboard:** globe (rotate/zoom/pan), layer panel, click a marker → *FIRE EVENT* panel → **[ ANALYZE FIRE ]**
   (sign-in required) → prediction summary, preview chart, NOW→72 h timeline, live logs and alerts.
+* **Globe layers:** observed FIRMS detections (global), AI predicted spread (N. California model domain only),
+  terrain relief, and **Atmosphere → Wind flow**: GPU particles following the real NOAA GFS 1° 10 m wind field
+  (`/api/wind/field`, fetched from NOMADS, no key). Turn it off in the layer panel to stop the animation; opacity,
+  density, speed and a performance tier (Auto/High/Medium/Low) are adjustable. If no field can be downloaded the
+  panel shows *Wind data unavailable* and nothing is drawn. Details: [`docs/globe_visualization.md`](docs/globe_visualization.md).
 * **Simulation**, **Data**, **Models**, **Logs**, **Historical Data**, **Risk Assessment**, **Alerts**, **Settings**.
 * Sign up with email → 6-digit code (printed in the backend console in development) → *Signup successful.*
 
