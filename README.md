@@ -82,6 +82,59 @@ conversion / reprojection: [`docs/data_pipeline.md`](docs/data_pipeline.md).
 **Model domain:** 40–42°N, 124.5–122°W (where LANDFIRE, SRTM and WorldCover all exist locally). Fires elsewhere are
 displayed and described, but prediction reports "Model not trained for this region".
 
+### Downloaded datasets
+**~41 GB of raw data in `datasets/`:** 10 datasets in 57 data files. There are 36 FIRMS CSVs, 5 ERA5 GRIBs,
+6 SRTM tiles, 1 LANDFIRE raster, 2 WorldCover tiles and 7 MTBS zips. Raw files are not committed to Git. All dates
+and times are in UTC.
+
+| # | Dataset | Type | Files / size | Spatial coverage | Time coverage | Time resolution |
+|---|---|---|---|---|---|---|
+| 1 | NASA FIRMS VIIRS **Suomi NPP** (SV-C2) | Active-fire point detections (CSV) | 14 CSVs (13 yearly downloads), 20.8 GB | Global, 375 m pixels | 2012-01-20 → 2026-09-30 (**2013 and 2018 not downloaded**) | Per satellite overpass (date + HHMM UTC), ~2 passes/day |
+| 2 | NASA FIRMS VIIRS **NOAA-20** (J1V-C2) | Active-fire point detections (CSV) | 9 CSVs (8 yearly downloads), 12.7 GB | Global, 375 m | 2019-01-01 → 2026-09-30 | Per overpass |
+| 3 | NASA FIRMS VIIRS **NOAA-21** (J2V-C2) | Active-fire point detections (CSV, NRT) | 3 CSVs, 4.4 GB | Global, 375 m | 2024-01-17 → 2026-09-30 | Per overpass |
+| 4 | NASA FIRMS **MODIS** Terra/Aqua (M-C61) | Active-fire point detections (CSV) | 10 CSVs (9 yearly downloads), 3.0 GB | Global, 1 km | 2010–2011 and 2020-01-01 → 2026-09-30 (**2012–2019 not downloaded**) | Per overpass, ~4 passes/day |
+| 5 | ECMWF **ERA5** hourly single levels | Weather reanalysis (GRIB) | 5 GRIBs (one per year), ~1.7 GB | California: 32.5–42°N, 124.5–114.25°W at 0.25° (~25 km) | 2021-01-01 → 2025-12-31 on disk. **Only 2024 and 2025 are used** (`config/data_sources.yaml`) | Hourly |
+| 6 | NASA **SRTM** v3 1 arc-second | Elevation model (GeoTIFF) | 6 tiles, 156 MB | 40–42°N, 125–122°W, ~30 m | Acquired Feb 2000 (static) | — |
+| 7 | **LANDFIRE** 2025 FBFM40 | Surface fuel model (GeoTIFF + VAT) | 1 raster, 160 MB | 40–42°N, 124.5–122°W, 30 m (defines the model domain) | LF2025 version (static) | — |
+| 8 | **ESA WorldCover** 2021 v200 | Land cover, 11 classes (GeoTIFF) | 2 tiles, 87 MB | 39–42°N, 126–120°W, 10 m | 2021 (static) | — |
+| 9 | **MTBS / BAER / RAVG** burned-area perimeters | Fire perimeters (zipped shapefile) | 1 zip, 661 MB | All US, incl. Alaska, Hawaii, Puerto Rico; 918 perimeters fall inside the study box | 1984-07-02 → 2026-08-05 | Per fire event |
+| 10 | **MTBS** burn-severity mosaics (California) | Burn-severity classes (zipped GeoTIFF) | 6 zips (one per year), 32 MB | California, 30 m | Fire years 2020–2025 (2025 does not overlap the model domain) | Per fire year |
+
+### Regions and locations covered
+The datasets cover areas of four different sizes, from the whole world down to the study area:
+
+| Coverage level | Datasets | Region and places included |
+|---|---|---|
+| **Worldwide** | FIRMS Suomi NPP, NOAA-20, NOAA-21, MODIS (1–4) | Every continent. The yearly archives span about 54°S–66°N and 175°W–178°E. These detections drive the 3D globe. |
+| **Whole United States** | MTBS / BAER / RAVG perimeters (9) | Lower 48 states, Alaska, Hawaii and Puerto Rico (18–70°N, 166–65°W). Only the 918 fires inside the study box are processed. |
+| **California and Nevada** | ERA5 weather (5), MTBS severity mosaics (10) | ERA5: 32.5–42°N, 124.5–114.25°W. This is nearly all of California and most of Nevada, with thin edges of western Arizona and northern Baja California (Mexico). MTBS severity covers California only. |
+| **Northern California (wider)** | ESA WorldCover (8) | 39–42°N, 126–120°W. This runs from the Pacific coast to the Nevada border and from the Oregon border south to about Ukiah and Chico. It includes Lassen Volcanic National Park and Susanville. |
+| **Northern California study area (model domain)** | LANDFIRE fuels (7), SRTM elevation (6, slightly wider: 125–122°W), and the processed FIRMS, ERA5 and MTBS subsets | 40–42°N, 124.5–122°W: the Klamath Mountains and North Coast Ranges, from the Pacific coast to the Mount Shasta area. Counties: **Del Norte, Humboldt, Trinity, western Siskiyou, western Shasta** and **northwest Tehama**. Towns: **Crescent City, Eureka, Arcata, Weaverville, Redding, Yreka, Mount Shasta**. It also includes the Trinity Alps and the Six Rivers, Klamath and Shasta-Trinity National Forests. |
+
+What this means in practice:
+* **Fire monitoring works worldwide.** Fire spread **prediction** works only inside the study area above.
+* The processed FIRMS subset uses the study box plus a 0.5° buffer (39.5–42.5°N, 125–121.5°W), so it reaches into
+  far southern Oregon.
+* The processed ERA5 subset is 39.75–42°N, 124.5–121.75°W.
+* Processed MTBS severity rasters exist for 2020–2024. The 2025 mosaic has no fires inside the study area.
+
+Datasets used online, not downloaded:
+* **Open-Meteo forecast API (worldwide, queried at the selected fire):** current and forecast weather for live predictions. It covers the past 3 days plus a
+  4-day forecast at hourly steps (~1–11 km).
+* **NOAA GFS 1° (worldwide):** 10 m wind field for the globe wind-flow layer, fetched from NOMADS on demand.
+* **FIRMS API (worldwide):** global near-real-time detections (with `FIRMS_MAP_KEY`).
+
+**Processed from these (`data/processed/`, ~630 MB):**
+* FIRMS region subset: 602,529 detections in the domain (2010-01-22 → 2026-09-30).
+* Global recent NRT snapshot: 1,617,350 detections (2026-09-21 → 2026-09-30).
+* ERA5 subset for northern California (2024–2025, hourly NetCDF).
+* MTBS perimeters as GeoJSON and severity rasters for 2020–2024.
+* **WTRS training set** `wtrs-ncal-v1`: 2,400 simulated scenarios and 22,505 valid samples. These come from ERA5
+  2024–2025 fire seasons (June–October) at 30/60/120 m on a 128×128 grid. This is *simulated*, not observed, data.
+
+FIRMS data is used for monitoring, initialising each forecast and comparing historical replays. It is **not** a
+training input. The full table for each file is in [`data/DATA_INVENTORY.md`](data/DATA_INVENTORY.md).
+
 ## Database setup
 MongoDB collections: `users`, `email_verifications`, `fire_events`, `weather_conditions`, `predictions`, `alerts`,
 `model_runs`, `system_logs`, `simulations` — indexes (incl. 2dsphere, TTL) are created at start-up.
